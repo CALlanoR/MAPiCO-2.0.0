@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<Configuration>
+   <Instructions>
+      <PAR OpCode="1" NumParams="1">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+         </Params>
+      </PAR>   
+      <NEWV OpCode="2" NumParams="0"/>         
+      <NEWN OpCode="3" NumParams="0"/>               
+      <PUSHV OpCode="4" NumParams="1">
+         <Params>
+            <Param1 Tipo="C" TamBytes="16"/>
+         </Params>
+      </PUSHV>   
+      <PUSHN OpCode="5" NumParams="1">
+         <Params>
+            <Param1 Tipo="C" TamBytes="16"/>
+         </Params>
+      </PUSHN>
+      <POP OpCode="18" NumParams="0"/>      
+      <OBJVV OpCode="64" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJVV>      
+      <OBJNN OpCode="65" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJNN>
+      <OBJVN OpCode="66" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJVN>            
+      <OBJNV OpCode="67" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJNV>            
+      <OBJVVR OpCode="72" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJVVR>      
+      <OBJNNR OpCode="73" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJNNR>
+      <OBJVNR OpCode="74" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJVNR>            
+      <OBJNVR OpCode="75" NumParams="3">
+         <Params>
+            <Param1 Tipo="D" TamBytes="32"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+            <Param3 Tipo="C" TamBytes="8"/>                  
+         </Params>
+      </OBJNVR>      
+      <METH OpCode="80" NumParams="2">
+         <Params>
+            <Param1 Tipo="C" TamBytes="8"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+         </Params>
+      </METH>       
+      <RET OpCode="0" NumParams="0"/>      
+      <REPLICATE OpCode="7" NumParams="0"/>      
+      <CALL OpCode="20" NumParams="0"/>      
+      <TERMV OpCode="33" NumParams="1">
+         <Params>
+            <Param1 Tipo="C" TamBytes="16"/>
+         </Params>
+      </TERMV>   
+      <TERMC OpCode="32" NumParams="1">
+         <Params>
+            <Param1 Tipo="C" TamBytes="16"/>
+         </Params>
+      </TERMC>   
+      <TERMN OpCode="34" NumParams="1">
+         <Params>
+            <Param1 Tipo="C" TamBytes="16"/>
+         </Params>
+      </TERMN>      
+      <TERMF OpCode="35" NumParams="2">
+         <Params>
+            <Param1 Tipo="P" TamBytes="16"/>
+            <Param2 Tipo="C" TamBytes="16"/>
+         </Params>
+      </TERMF>      
+      <ATOM OpCode="36" NumParams="2">
+         <Params>
+            <Param1 Tipo="P" TamBytes="16"/>
+            <Param2 Tipo="C" TamBytes="16"/>
+         </Params>
+      </ATOM>
+      <ASK OpCode="25" NumParams="0"/>    
+      <TELL OpCode="24" NumParams="0"/>        
+   </Instructions>  
+   <Predicates>
+      <IGUAL Code="28"/>
+      <EQ Code="28"/>
+      <DIF Code="1"/>
+      <MAY Code="2"/>
+      <MAI Code="3"/>
+      <MEN Code="4"/>
+      <MEI Code="5"/>
+      <ADD Code="6"/>
+      <SUBS Code="7"/>
+      <LESS Code="7"/>
+      <MULT Code="8"/>
+      <DIV Code="9"/>
+      <MOD Code="10"/>
+      <RANGE Code="11"/>
+      <IN Code="12"/>
+      <MIN Code="13"/>
+      <MAX Code="14"/>
+      <MAXIN Code="10655"/>
+      <MININ Code="0"/>
+      <COMP Code="17"/>
+      <IMP Code="18"/>
+      <AND Code="19"/>
+      <OR Code="20"/>
+      <DOM Code="21"/>
+      <SETADD Code="22"/>
+      <SETSUB Code="23"/>
+      <DIFF Code="24"/>
+      <SETMULT Code="25"/>
+      <SETDIV Code="26"/>
+      <SETMOD Code="27"/>
+      <LOGAND Code="29"/>
+      <TRUE Code="1"/>
+      <FALSE Code="0"/>
+   </Predicates>
+</Configuration>

@@ -1,0 +1,6 @@
+local x, y (clone (sen>0, fwd=0) > [ fact (n,r) : local r', n' in (tell r = r' * n)
+                                                     | tell n' = n - 1
+                                                     | n' < fact(n', r') ]
+               | clone (sen=0) > [ fact(n,r) : tell r = 1])
+               | x < fact(x,y)
+               | tell x=3

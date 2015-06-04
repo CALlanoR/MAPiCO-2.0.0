@@ -1,0 +1,49 @@
+(v vR1)
+(v vR2)
+(v vR3)
+(v vR4)
+(v vT1)
+(v vT2)
+(v vT3)
+(v vT4)
+(v vT5)
+(v vT6)
+(v vT7)
+(v vT8)
+(v vT9)
+(v vT10)
+(v vT11)
+(v vT12)
+(v System)
+(v queen)
+(
+*(queen,queen)|>[input:()(
+!(vR1>=1).!(vR1<=4).!(vR2>=1).!(vR2<=4).!(vR3>=1).!(vR3<=4).!(vR4>=1).!(vR4<=4).@
+|!(vR1=3).@
+|!(vR1<>vR2).@
+|!(vR1<>vR3).@
+|!(vR1<>vR4).@
+|!(vR2<>vR3).@
+|!(vR2<>vR4).@
+|!(vR3<>vR4).@
+|!(vT1=vR2+1).@
+|!(vR1<>vT1).@
+|?(vR2>=1).(!(vT2=vR2-1).!(vT1<>vT2).!(vR1<>vT2).@)
+|!(vT3=vR3+1).@
+|!(vR2<>vT3).@
+|?(vR3>=1).(!(vT4=vR3-1).!(vT3<>vT4).!(vR2<>vT4).@)
+|!(vT5=vR4+1).@
+|!(vR3<>vT5).@
+|?(vR4>=1).(!(vT6=vR4-1).!(vT5<>vT6).!(vR3<>vT6).@)
+|!(vT7=vR3+2).@
+|!(vR1<>vT7).@
+|?(vR3>=2).(!(vT8=vR3-2).!(vT7<>vT8).!(vR1<>vT8).@)
+|!(vT9=vR4+2).@
+|!(vR2<>vT9).@
+|?(vR4>=2).(!(vT10=vR4-2).!(vT9<>vT10).@|!(vR2<>vT10).@)
+|!(vT11=vR3+3).@
+|!(vR1<>vT11).@
+|?(vR3>=3).(!(vT12=vR3-3).!(vT11<>vT12).@|!(vR1<>vT12).@)
+)]
+|queen<|input[].System<|browsevar[vR1].System<|browsevar[vR2].System<|browsevar[vR3].System<|browsevar[vR4].@      
+)

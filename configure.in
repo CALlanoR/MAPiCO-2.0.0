@@ -1,0 +1,6 @@
+dnl Top dir
+AC_INIT(mapico/MAPiCO.c)
+AM_INIT_AUTOMAKE(mapico2,0.0.1)
+
+AC_CONFIG_SUBDIRS(constsys mapico plugins asmapico)
+AC_OUTPUT(Makefile)

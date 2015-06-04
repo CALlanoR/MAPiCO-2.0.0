@@ -1,0 +1,10 @@
+(Local x, y in
+( clone (sender >= 3) > [ fibo (n,r): local n', n'', r', r'' in (tell r = r' + r'')
+                        | tell n' = n - 1
+                        | tell n'' = n - 2
+                        | n' < fibo (n', r') 
+                        | n'' < fibo(n'', r'')])
+| ( clone (sender = 0) > [fibo (n,r) : tell r = 0])
+| ( clone (sender = 1) > [fibo (n,r) : tell r = 1])
+| ( clone (sender = 2) > [fibo (n,r) : tell r = 1])  
+| tell (x = 3) then x < fibo (x,y ))

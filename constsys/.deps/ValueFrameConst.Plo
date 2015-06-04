@@ -1,0 +1,3 @@
+ValueFrameConst.lo ValueFrameConst.o: ValueFrameConst.c ValueFrameConst.h
+
+ValueFrameConst.h:

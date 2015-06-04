@@ -1,0 +1,88 @@
+(v vS)
+(v vE)
+(v vN)
+(v vD)
+(v vM)
+(v vO)
+(v vR)
+(v vY)
+(v vT1)
+(v vT2)
+(v vT3)
+(v vT4)
+(v vT5)
+(v vT6)
+(v vT7)
+(v vT8)
+(v vT9)
+(v vT10)
+(v vT11)
+(v vT12)
+(v vT13)
+(v vT14)
+(v vT15)
+(v vT16)
+(v vT17)
+(v vT18)
+(v vT19)
+(v vT20)
+(v vT21)
+(v System)
+(v send)
+(
+*(send,send)|>[input:()(
+!(vS>=0).!(vS<=9).!(vE>=0).!(vE<=9).!(vN>=0).!(vN<=9).!(vD>=0).!(vD<=9).!(vM>=0).!(vM<=9).!(vO>=0).!(vO<=9).!(vR>=0).!(vR<=9).!(vY>=0).!(vY<=9).!(vM<>0).!(vS<>0).@
+|!(vY=2).@
+|!(vS<>vE).@
+|!(vS<>vN).@
+|!(vS<>vD).@
+|!(vS<>vM).@
+|!(vS<>vO).@
+|!(vS<>vR).@
+|!(vS<>vY).@
+|!(vE<>vN).@
+|!(vE<>vD).@
+|!(vE<>vM).@
+|!(vE<>vO).@
+|!(vE<>vR).@
+|!(vE<>vY).@
+|!(vN<>vD).@
+|!(vN<>vM).@
+|!(vN<>vO).@
+|!(vN<>vR).@
+|!(vN<>vY).@
+|!(vD<>vM).@
+|!(vD<>vO).@
+|!(vD<>vR).@
+|!(vD<>vY).@
+|!(vM<>vO).@
+|!(vM<>vR).@
+|!(vM<>vY).@
+|!(vO<>vR).@
+|!(vO<>vY).@
+|!(vR<>vY).@
+|!(vS*1000=vT1).@
+|!(vE*100=vT2).@
+|!(vN*10=vT3).@
+|!(vM*1000=vT4).@
+|!(vO*100=vT5).@
+|!(vR*10=vT6).@
+|!(vT1+vT2=vT7).@
+|!(vT7+vD=vT8).@
+|!(vT8+vT3=vT9).@
+|!(vT9+vT4=vT10).@
+|!(vT10+vT5=vT11).@
+|!(vT11+vT6=vT12).@
+|!(vT12+vE=vT13).@
+|!(vM*10000=vT14).@
+|!(vO*1000=vT15).@
+|!(vN*100=vT16).@
+|!(vE*10=vT17).@
+|!(vT14+vT15=vT18).@
+|!(vT18+vT16=vT19).@
+|!(vT19+vT17=vT20).@
+|!(vT20+vY=vT21).@
+|!(vT21=vT13).@
+)]
+|send<|input[].System<|browsevar[vS].System<|browsevar[vE].System<|browsevar[vN].System<|browsevar[vD].System<|browsevar[vM].System<|browsevar[vO].System<|browsevar[vR].System<|browsevar[vY].@      
+)

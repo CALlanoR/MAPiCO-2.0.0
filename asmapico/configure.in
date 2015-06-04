@@ -1,0 +1,14 @@
+dnl asmapico
+AC_INIT(AssemblyMAPiCO.c)
+AM_INIT_AUTOMAKE(asmapico,0.0.1)
+
+dnl Find and test the C compiler
+AC_LANG_C
+AC_PROG_CC
+
+AM_PATH_XML2(2.6.16)
+
+AC_PROG_MAKE_SET
+
+dnl read the Makefile.in and write Makefile
+AC_OUTPUT(Makefile)

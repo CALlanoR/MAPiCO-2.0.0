@@ -1,0 +1,18 @@
+dnl Constraint System
+AC_INIT(CS.c)
+AC_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(libCS,0.0.1)
+AC_PROG_LIBTOOL
+
+AC_PROG_INSTALL
+
+dnl Find and test the C compiler
+AC_LANG_C
+AC_PROG_CC
+
+AC_PROG_MAKE_SET
+
+AC_HEADER_STDC
+
+dnl read the Makefile.in and write Makefile
+AC_OUTPUT(Makefile)

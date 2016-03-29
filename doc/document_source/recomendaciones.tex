@@ -1,0 +1,15 @@
+\chapter{RECOMENDACIONES}
+\label{caprecomendaciones}
+
+\begin{itemize}
+\item Implementar la alternativa de Eliminaci'on de Variables en el Sistema de \mbox{Restricciones} (ver secci'on \ref{secElimVar}). En esta alternativa se debe considerar que la m'aquina guarda la referencia del proceso que la creo y que esa referencia se puede utilizar para su reconocimiento, propagaci'on y posterior eliminaci'on. En caso de implementar la Eliminaci'on de Variables, se deber'ia considerar reimplementar o modificar el \emph{Explorador de Cordial} \cite{Messa.zuniga:explorador}, para mejorar la eficiencia de 'este al momento de la reducci'on del dominio de las variables en la b'usqueda de la soluci'on.
+\item Cambiar el Sistema de Restricciones a uno mas genérico como \emph{GECODE - Generic Constraint Development Enviroment} \cite{Schulte:gecode}, ambiente abierto, libre, portable y accesible para desarollar sistemas de restricciones y aplicaciones.
+\item Realizar pruebas funcionales de programas ejecutados desde \emph{Cordial} y no solo desde \emph{MAPiCO}, para comparar tiempos y resultados. 
+\item Reutilizar la M'aquina Abstracta \emph{MAPiCO} para implementar otros c'alculos como $\pi$ o $NTCC$.
+\item Implementar un Explorador de Restriciones similar al trabajo de grado \emph{Explorador de Cordial} \cite{Messa.zuniga:explorador}.
+\item Implementar el Compilador \emph{PiCO - MAPiCO} tratando de optimizar la generación de variables.
+\item Implementar un Garbage Collector dentro de \emph{MAPiCO} de las variables que no se requieren mas durante la ejecución, tomando en consideración la altermativa de Eliminación de Variables (secci'on \ref{secElimVar}).
+\item Implementar un cache de objetos que permita minimizar los tiempos de búsqueda de los objetos más utilizados.
+\item Implementar el soporte de hilos en la Máquina Abstracta \emph{MAPiCO}, con el fin de que la ejecución de \emph{MAPiCO} se realice en un hilo diferente al de la eliminación de variables por parte del \emph{Store}.
+\end{itemize}
+

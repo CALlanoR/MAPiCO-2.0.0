@@ -1,0 +1,22 @@
+% intro.tex - Introducci'on de la tesis de grado
+
+
+\specialchapter{INTRODUCCI\'ON}
+\label{capintro}
+
+Una M'aquina Abstracta define la arquitectura para la ejecuci'on de programas de lenguajes que estan soportados por un c'alculo computacional. El lenguaje de programaci'on visual \emph{Cordial}, integra los paradigmas de programaci'on orientada a objetos, concurrente y por restricciones, toma como base formal el c'alculo computacional \emph{PiCO} \cite{pico-ant} y utiliza la M'aquina Abstracta \emph{MAPiCO} para la ejecuci'on de programas.\\
+\\
+En pruebas realizadas a \emph{Cordial}, se determin'o que la etapa de ejecuci'on conformada por la M'aquina Abstracta \emph{MAPiCO} y el Sistema de Restricciones, no arrojaba los resultados esperados en rendimiento, generando tiempos no deseables \cite{garcia.vasquez:sis-res-dom-finito}.\\ 
+\\
+En el proyecto \cite{garcia.vasquez:sis-res-dom-finito}, se evalu'o los dos componentes de la etapa de ejecuci'on para determinar las posibles causas de los problemas de eficiencia. Se identific'o que el Sistema de Restricciones Aritm'etico era ineficiente y presentaba problemas de no correctitud; las causas de ineficiencia se sustentaron en que la implementaci'on de 'este sistema se \mbox{realiz'o} en el lenguaje de programaci'on \emph{JAVA}, que por ser un lenguaje interpretado es mas lento que un lenguaje completamente compilado como \emph{C}; Las causas de no \mbox{correctitud}, se sustentaron en que exist'ian errores en la implementaci'on del modelo de sistema de restricciones aritm'etico de $Bj\ddot{o}rn \ Carlson$, en los procesos que involucran la condici'on `diferente' y en la actualizaci'on de dominios de las variables cuando 'estos son inconsistentes.\\
+\\
+Inicialmente se implement'o un Sistema de Restricciones Aritm'etico en lenguaje \emph{C}, basado en restricciones de dominio finito; que garantiza la eficiencia y la correctitud. Posteriormente se determinó, que el tiempo de ejecuci'on podr'ia mejorarse implementando el Sistema de Restricciones Ecuacional y la M'aquina Abstracta \emph{MAPiCO} en un lenguaje no interpretado como \emph{C}.\\
+\\
+La Reimplementaci'on de la M'aquina Abstracta \emph{MAPiCO} se hace necesaria, no solo para mejorar la eficiencia del tiempo de ejecuci'on de \emph{Cordial}, sino para adaptar su dise~no con respecto a las modificaciones realizadas al c'alculo \emph{PiCO} y brindar extensibilidad del conjunto de instrucciones.\\
+\\
+Este trabajo plantea una reimplementaci'on de la m'aquina con las anteriores caracter'isticas, adem'as de evaluar una alternativa para determinar la posibilidad de eliminaci'on de variables locales de procesos ejecutados, las cuales no se necesitar'an m'as a lo largo de la ejecuci'on, mejorando as'i el tiempo de ejecuci'on del Sistema de Restricciones con el cual interactua constantemente.\\
+\\
+En el cap'itulo 1 se da una breve descripci'on de m'aquinas abstractas, sus ventajas y desventajas. En el cap'itulo 2 se describen algunos c'alculos computacionales, haciendo enf'asis en el c'alculo \emph{PiCO}, su definici'on anterior y actual. En el cap'itulo 3 se describe y analiza la primera implementaci'on de la M'aquina Abstracta \emph{MAPiCO}, siguiendo con la presentaci'on de alternativas de dise~no para su reimplementaci'on y terminando con la descripci'on de caracteristicas fundamentales de la nueva m'aquina. En el cap'itulo 4 se presentan detalles de la implementaci'on, considerando estructuras de datos, alternativas evaluadas para la implementaci'on de m'odulos din'amicos y complejidades. Por 'ultimo en el cap'itulo 5 se describen algunas pruebas computacionales, el resultado de la ejecuci'on y se realiza un an'alisis comparativo del desempe~no de la nueva \emph{MAPiCO} contra la versi'on anterior.
+
+
+

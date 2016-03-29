@@ -1,0 +1,112 @@
+\documentclass[a4paper,bsc,spanish]{csthesis}
+\usepackage{t1enc}
+\usepackage[spanish,activeacute]{babel}
+\usepackage{latexsym}
+%\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{makeidx}
+\usepackage{listings}
+\usepackage{ltablex}
+\usepackage{appendix} 
+\usepackage[latin1]{inputenc}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{0.4cm}
+
+\addto\captionsspanish{%
+\def\tablename{Tabla}%
+\def\tableofcontentsname{Índice de Tablas}%
+}
+
+\makeindex
+\begin{document}
+
+\pagenumbering{roman}
+%%%%%%%%%%%%%% Titulo del trabajo %%%%%%%%%%%%%%%%%%%%
+\include{titulo}
+
+%%%%%%%%%%%%%% Agradecimientos %%%%%%%%%%%%%%%%%%%%%%%
+\include{agradecimientos}
+
+\setcounter{page}{9} % ojo no es general
+
+\tableofcontents
+\listoftables
+\listoffigures
+\listofanexos
+
+%%%%%%%%%%%%%% Configuracion del documento de tesis %%%
+\include{configuracion}
+
+%%%%%%%%%%%%%% Resumen del documento de tesis %%%%%%%%%
+\include{abstract}
+
+%%%%%%%%%%%%%% Introduccion del documento %%%%%%%%%%%%%
+\include{introduccion}
+
+\pagenumbering {arabic}
+\setcounter{page}{19} % ojo no es general 19
+
+%%%%%%%%%%%%%% Generalidades del documento %%%%%%%%%%%%
+\include{enfoquesaprov}
+
+%%%%%%%% Diseno JanuEP
+\include{diseno}
+
+%%%%%%%% API REST
+\include{apirest}
+
+%%%%%%%% Capitulo Implementacion   %%%%%%%%%%%%%%%%%%%%%
+\include{implementacion}
+
+%%%%%%%% Capitulo Pruebas   %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\include{pruebas}
+
+%%%%%%%% Capitulo Conclusiones   %%%%%%%%%%%%%%%%%%%%%%%
+\include{conclusiones}
+
+%%%%%%%% Capitulo Recomendaciones   %%%%%%%%%%%%%%%%%%%%
+\include{recomendaciones}
+
+%\nocite{pratt:proglang,
+%        aho.sethi.jeffrey:compiladores,
+%        valencia.diaz.rueda:TR1Avispa, 
+%        quesada.rueda.tamura:modelo-visual-cordial,
+%        tyco:tesis,
+%        Eco:comohacertesis,
+%        quesada.rueda.tamura:programacion-visual,
+%        mehl.sche.schu:amoz,
+%        lind.yell:jvms,
+%        frameworkforcompilingoc, 
+%        tycoam:definition, 
+%        boeschen.fecht:osmall,
+%        robin.joachim.david:mobile,
+%        abadi.cardelli:objects}
+{
+\singlespace
+\bibliographystyle{alpha}
+\bibliography{bibliografia}
+}
+\def\thefigure{D.\arabic{figure}}
+\include{anexos}
+\printindex
+\end{document}
+
+
+
+
+
+
+
+

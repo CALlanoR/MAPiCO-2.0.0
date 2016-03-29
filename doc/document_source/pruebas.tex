@@ -1,0 +1,203 @@
+\chapter{PRUEBAS Y RESULTADOS}
+\label{capprueba}
+
+
+A continuación se presentan las pruebas realizadas a la reimplementación de la Máquina Abstracta \emph{MAPiCO}, estableciendo una serie de comparaciones con la primera implementación que permitan comprobar una mejora sustancial de la eficiencia reflejada en tiempos mínimos de ejecución.\\\\
+Para establecer comparaciones entre la anterior y la nueva implementación de \mbox{\emph{MAPiCO}}, se realizaron pruebas en una máquina \emph{AMD AThlon} a 32 bits con 512 MB en RAM en tres diferentes escenarios:
+
+\begin{itemize}
+\item \textbf{Escenario 1}: Máquina Abstracta \emph{MAPiCO en JAVA} y Sistema de Restricciones en \emph{JAVA}.
+\item \textbf{Escenario 2}: Máquina Abstracta \emph{MAPiCO en JAVA} y Sistema de Restricciones en \emph{C}.
+\item \textbf{Escenario 3}: Máquina Abstracta \emph{MAPiCO en C} y Sistema de Restricciones en \emph{C}.
+\end {itemize}
+
+Denotación referente a los diferentes escenarios:
+\begin{itemize}
+\item \emph{MAPICO JAVA}: Máquina Abstracta \emph{MAPiCO} en \emph{JAVA}
+\item \emph{MAPICO C}: Máquina Abstracta \emph{MAPiCO} en \emph{C}
+\item \emph{Store JAVA}: Sistema de Restricciones en \emph{JAVA}
+\item \emph{Store C}: Sistema de Restricciones en \emph{C}
+\end{itemize}
+
+Se eligieron programas de prueba que implicaran trabajo de la Máquina Abstracta y el Sistema de Restricciones, para tal fin se evaluaron los programas de pruebas de \cite{garcia.vasquez:sis-res-dom-finito} y se seleccionaron tres de ellos:
+
+\begin{itemize}
+\item FACTORIAL
+\item SEND + MORE = MONEY
+\item NREINAS
+\end{itemize}
+
+Los programas fueron codificados en el Cálculo \emph{PiCO} Anterior para los {\bf Escenarios 1 y 2} y en el Cálculo \emph{PiCO} Actual para el {\bf Escenario 3}. Los resultados para cada caso son los siguientes:
+
+\section{FACTORIAL}
+
+Al ejecutar el programa Factorial en los diferentes escenarios, se obtuvieron los \mbox{siguientes} tiempos de ejecución en milisegundos (ver Tabla \ref{TimeFactMilis}):
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|c|r|r|r|p{1in}|p{1in}|p{1in}|} \hline\hline
+\multicolumn{1}{|c|}{\bf Programa } & \multicolumn{3}{c|}{\bf Escenarios de Pruebas } \\ \cline{2-4}
+\multicolumn{1}{|c|}{\bf Factorial}&\multicolumn{1}{c|}{\bf Escenario 1} & \multicolumn{1}{c|}{\bf Escenario 2} & \multicolumn{1}{c|}{\bf Escenario 3} \\ 
+& \multicolumn{1}{c|}{\it Máquina JAVA /} & \multicolumn{1}{c|}{\it Máquina JAVA /} & \multicolumn{1}{c|}{\it Máquina C /} \\
+& \multicolumn{1}{c|}{\it Store JAVA} & \multicolumn{1}{c|}{\it Store C} & \multicolumn{1}{c|}{\it Store C} \\ \hline\hline
+0 & 80 & 32 & 0.0009 \\ \hline
+1 & 104 & 34 & 0.003 \\ \hline
+2 & 125 & 54 & 0.005 \\ \hline
+3 & 182 & 56 & 0.008 \\ \hline
+4 & 200 & 59 & 0.011 \\ \hline
+5 & 215 & 66 & 0.014 \\ \hline
+6 & 244 & 75 & 0.020 \\ \hline
+7 & 274 & 81 & 0.023 \\ \hline\hline
+\end{tabular}
+\caption{Tiempos de Ejecución en milisegundos del Programa Factorial del $0$ al $7$ \label{TimeFactMilis}}
+\end{center}
+\end{table}
+
+Para los diferentes escenarios de pruebas, los resultados de ejecución del programa Factorial para los números del $1$ al $7$ fueron los esperados, pero en eficiencia considerando los tiempos de ejecución, se puede apreciar una disminución significativa en el {\bf Escenario 3}, que hace referencia a la reimplementación de \emph{MAPiCO en C} (ver figura \ref{FactorialDefinitivo} con respecto a datos de la Tabla \ref{TimeFactMilis}).
+Cabe mencionar que no se realizaron pruebas de Factorial en números superiores a $7$ por una limitante del Sistema de Restricciones, ya que este solo soporta variables de tipo entero (int).
+
+\begin{figure*}[!h]
+\begin{center}
+\includegraphics[angle=0,width=11cm]{Factorial.eps}
+\caption{\label{FactorialDefinitivo} Representación Gráfica de Tiempos de Ejecución en milisegundos del \mbox{Programa} Factorial}
+\end{center}
+\end{figure*}
+
+\section{SMM: SEND + MORE = MONEY}
+
+SEND + MORE = MONEY es un puzzle criptoaritmético de solución única, en el cual la suma SEND + MORE debe ser igual a MONEY, considerando cada letra de esta ecuación como un  digito independiente de la siguiente forma:
+
+\begin{center}
+\begin{tabular}{r r r p{6cm}|p{11cm}|p{6cm}}
+  SEND&     &9567 \\ 
+ +MORE&     &+ 1085 \\ \cline{1-1} \cline{3-3}
+ MONEY&     &10652 \\ 
+\end{tabular}
+\end{center}
+
+Los tiempos de ejecución en milisegundos son los siguientes (Ver Tabla \ref{TimeSMMMilis}):
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|c|r|r|r|p{1in}|p{1in}|p{1in}|} \hline\hline
+\multicolumn{1}{|c|}{\bf Programa } & \multicolumn{3}{c|}{\bf Escenarios de Pruebas } \\ \cline{2-4}
+\multicolumn{1}{|c|}{\bf SMM}&\multicolumn{1}{c|}{\bf Escenario 1} & \multicolumn{1}{c|}{\bf Escenario 2} & \multicolumn{1}{c|}{\bf Escenario 3} \\ 
+& \multicolumn{1}{c|}{\it Máquina JAVA /} & \multicolumn{1}{c|}{\it Máquina JAVA /} & \multicolumn{1}{c|}{\it Máquina C /} \\
+& \multicolumn{1}{c|}{\it Store JAVA} & \multicolumn{1}{c|}{\it Store C} & \multicolumn{1}{c|}{\it Store C} \\ \hline\hline
+$TELL \ Y = 2$ & 533 & 132 & 0.0690 \\ \hline\hline
+\end{tabular}
+\caption{Tiempos de Ejecución en milisegundos del Programa \emph{SMM} \label{TimeSMMMilis}}
+\end{center}
+\end{table}
+
+En esta prueba se fijo la variable $Y$ con el valor de la constante $2$ ($TELL \ Y = 2$) y se obtuvieron los siguientes dominios para las variables $S,E,N,D,M,O,R,Y$ en el {\bf Escenario 3} que involucra a \emph{MAPiCO en C} (ver Tabla \ref{ResultadosSMM}):
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{l l l p{6cm}|p{6cm}|p{6cm}}
+  $S$& $in$ & $\{9,9 \}$ \\ 
+  $E,D,R$& $in$ & $ \{3,8 \}$ \\ 
+  $N$& $in$ & $\{3,6 \}$ \\ 
+  $M$& $in$ & $\{1,1 \}$ \\ 
+  $O$& $in$ & $\{0,0 \}$ \\ 
+  $Y$& $in$ & $\{2,2 \}$ \\ 
+\end{tabular}
+\caption{Resultados del Programa \emph{SMM} en el {\bf Escenario 3} \label{ResultadosSMM}}
+\end{center}
+\end{table}
+
+Los resultados del {\bf Escenario 3} son mucho mas cercanos a la única solución, pero diferentes a los del {\bf Escenario 2} \cite{garcia.vasquez:sis-res-dom-finito}, tomando en consideración esto, se confirma el planteamiento de la variación de los resultados debido al manejo de los conceptos de arcoconsistencia parcial y a la propagación de información sobre mínimos y máximos usados en el módelo teórico del Sistema de Restricciones \cite{garcia.vasquez:sis-res-dom-finito}.\\\\
+Hay que resaltar que los resultados del {\bf Escenario 1} para las pruebas del \emph{SMM} y \emph{NREINAS} no fueron los esperados, del Store o Sistema de Restricciones en \emph{JAVA} no se pudo deducir ninguna solución, los dominios de las variables quedaron en cero, posiblemente debido a los errores en la implementación del modelo del Sistema de Restricciones Aritmético \cite{garcia.vasquez:sis-res-dom-finito}.\\\\
+En la ejecución del programa \emph{SMM} se puede apreciar que el {\bf Escenario 3}, que involucra la reimplementación de \emph{MAPiCO en C}, presenta el mínimo tiempo de ejecución (Ver figura \ref{MoneyDefinitivo} con respecto a datos de la Tabla \ref{TimeSMMMilis}).
+
+\begin{figure*}[!h]
+\begin{center}
+\includegraphics[angle=0,width=11cm]{SMM.eps}
+\caption{\label{MoneyDefinitivo} Representación Gráfica de Tiempos de Ejecución en milisegundos del \mbox{Programa} \emph{SMM}}
+\end{center}
+\end{figure*}
+
+\section{NREINAS}
+
+El problema \emph{NREINAS} consiste en colocar $n$ reinas en un tablero de $n x n$, de forma que no puede haber dos piezas en la misma línea horizontal, vertical o diagonal. Este \mbox{problema} es \emph{NP - completo} y no tiene solución para $n = 2$ y $n = 3$, para $n = 4$ tiene solución única y para $n = 8$ tiene $80$ soluciones dependiendo de las restricciones que se impongan.\\\\
+En esta prueba, considerando las variables $X_{1},X_{2},X_{3},X_{4}$ y determinado $X_{3} = 4$, se obtuvieron los siguientes tiempos de ejecución en milisegundos (ver Tabla \ref{TimeNREINASMilis}):
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|c|r|r|r|p{1in}|p{1in}|p{1in}|} \hline\hline
+\multicolumn{1}{|c|}{\bf Programa } & \multicolumn{3}{c|}{\bf Escenarios de Pruebas } \\ \cline{2-4}
+\multicolumn{1}{|c|}{\bf NREINAS}&\multicolumn{1}{c|}{\bf Escenario 1} & \multicolumn{1}{c|}{\bf Escenario 2} & \multicolumn{1}{c|}{\bf Escenario 3} \\ 
+& \multicolumn{1}{c|}{\it Máquina JAVA /} & \multicolumn{1}{c|}{\it Máquina JAVA /} & \multicolumn{1}{c|}{\it Máquina C /} \\
+& \multicolumn{1}{c|}{\it Store JAVA} & \multicolumn{1}{c|}{\it Store C} & \multicolumn{1}{c|}{\it Store C} \\ \hline\hline
+$TELL \ X_{3}= 4$ & 199 & 83 & 0.0229 \\ \hline\hline
+\end{tabular}
+\caption{Tiempos de Ejecución en milisegundos del Programa \emph{NREINAS} \label{TimeNREINASMilis}}
+\end{center}
+\end{table}
+
+Los resultados para el {\bf Escenario 3} son los siguientes (ver Tabla \ref{ResultadosNREINAS}):
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{l l l p{6cm}|p{6cm}|p{6cm}}
+  $X_{1}$& $in$ & $\{3,3 \}$ \\ 
+  $X_{2}$& $in$ & $ \{1,1 \}$ \\ 
+  $X_{3}$& $in$ & $\{4,4 \}$ \\ 
+  $X_{4}$& $in$ & $\{2,2 \}$ \\ 
+\end{tabular}
+\caption{Resultados del Programa \emph{NREINAS} en el {\bf Escenario 3} \label{ResultadosNREINAS}}
+\end{center}
+\end{table}
+
+Una vez mas, como se puede notar en la figura \ref{NQueenDefinitivo} (representación de los datos de la Tabla \ref{TimeNREINASMilis}), los tiempos mínimos de ejecución fueron registrados por el {\bf Escenario 3}, en el que interviene de forma significativa la reimplementación de \emph{MAPiCO en el lenguaje C}.
+\begin{figure*}[!h]
+\begin{center}
+\includegraphics[angle=0,width=11cm]{NReinas.eps}
+\caption{\label{NQueenDefinitivo} Representación Gráfica de Tiempos de Ejecución en milisegundos del \mbox{Programa} \emph{NREINAS}}
+\end{center}
+\end{figure*}
+
+Adicionalmente, se realizaron comparaciones de los tiempos de ejecución de los programas $Factorial$ y $Fibonacci$ en diferentes entornos como $JAVA$, $.NET$ y $GECODE$, apreciando tiempos competitivos de \emph{MAPiCO} frente a estos entornos. Los correspondientes tiempos de ejecución en milisegundos se presentan en las Tablas \ref{TimeEjeFact} y \ref{TimeEjeFibo}.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|r|r|r|r|p{1in}|p{1in}|p{1in}|p{1in}|} \hline\hline
+\multicolumn{1}{|c|}{\bf Programa } & \multicolumn{4}{c|}{\bf Entornos de Ejecución} \\ \cline{2-5}
+\multicolumn{1}{|c|}{\bf Factorial}&\multicolumn{1}{c|}{\bf Java} & \multicolumn{1}{c|}{\bf .Net} & \multicolumn{1}{c|}{\bf GECODE} & \multicolumn{1}{c|}{\bf MAPiCO} \\ \hline\hline 
+0 & 0 & 0 & 0.15 & 0.0009 \\ \hline
+1 & 0 & 0 & 0.15 & 0,0031 \\ \hline
+2 & 0 & 0  & 0.15 & 0,0051 \\ \hline
+3 & 0.15 & 0 & 0.15 & 0.0081 \\ \hline
+4 & 0.15 & 0,15625  & 0.15 & 0.0111 \\ \hline
+5 & 0.15 & 0,15625  & 0.15 & 0.0141 \\ \hline
+6 & 0.15 & 0,15625  & 0.15 & 0.0201 \\ \hline
+7 & 0.16 & 0,15625  & 0.15 & 0.0231 \\ \hline\hline
+\end{tabular}
+\caption{Comparación de Tiempos de Ejecución del Programa Factorial en Diferentes Entornos \label{TimeEjeFact}}
+\end{center}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|c|r|r|r|p{1in}|p{1in}|p{1in}|} \hline\hline
+\multicolumn{1}{|c|}{\bf Programa } & \multicolumn{3}{c|}{\bf Entornos de Ejecución} \\ \cline{2-4}
+\multicolumn{1}{|c|}{\bf Fibonacci}&\multicolumn{1}{c|}{\bf Java} & \multicolumn{1}{c|}{\bf .Net}& \multicolumn{1}{c|}{\bf MAPiCO} \\ \hline\hline 
+0 & 0 & 0 & 0,001  \\ \hline
+1 & 0 & 0 & 0,001 \\ \hline
+2 & 0 & 0  & 0,001 \\ \hline
+3 & 0.15 & 0 & 0,003 \\ \hline
+4 & 0.15 & 0,15625  & 0,005 \\ \hline
+5 & 0.15 & 0,15625  & 0.011 \\ \hline
+6 & 0.15 & 0,15625  & 0.022 \\ \hline
+7 & 0.16 & 0,15625  & 0.055 \\ \hline
+8 & 0.16 & 0,15625  & 0,133 \\ \hline
+9 & 0.16 & 0,15625  & 0,329 \\ \hline
+10 & 0.16 & 0,15625  & 0,851 \\ \hline\hline
+\end{tabular}
+\caption{Comparación de Tiempos de Ejecución del Programa Fibonacci en Diferentes Entornos \label{TimeEjeFibo}}
+\end{center}
+\end{table}
+
+Con las anteriores pruebas se demuestra que la reimplementación de la Máquina \mbox{Abstracta} \emph{MAPiCO en el lenguaje C}, representa una disminución significativa en los tiempos de ejecución de los diferentes escenarios y entornos, lo que determina una mejora en la eficiencia de la etapa de ejecución del Lenguaje \emph{Cordial}.
+
+
+

@@ -1,0 +1,49 @@
+\BOOKMARK [0][-]{chapter*.2}{\315ndice de cuadros}{}
+\BOOKMARK [0][-]{chapter*.3}{\315ndice de figuras}{}
+\BOOKMARK [0][-]{chapter*.4}{\315ndice de Anexos}{}
+\BOOKMARK [0][-]{chapter*.5}{INTRODUCCI\323N}{}
+\BOOKMARK [0][-]{chapter.1}{APROVISIONAMIENTO DE M\301QUINAS VIRTUALES}{}
+\BOOKMARK [1][-]{section.1.1}{Enfoques de aprovisionamiento}{chapter.1}
+\BOOKMARK [1][-]{section.1.2}{Herramientas de despliegue actuales}{chapter.1}
+\BOOKMARK [2][-]{subsection.1.2.1}{Nixes}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.2}{SmartFrog}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.3}{Radia}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.4}{Cobbler}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.5}{Amazon EC2}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.6}{HP Utility Data Center}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.7}{Oracle VM Templates}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.8}{Shef}{section.1.2}
+\BOOKMARK [2][-]{subsection.1.2.9}{vagrant}{section.1.2}
+\BOOKMARK [0][-]{chapter.2}{Janu: Framework para aprovisionamiento de soluciones virtuales}{}
+\BOOKMARK [1][-]{section.2.1}{Dise\361o Inicial de Janu}{chapter.2}
+\BOOKMARK [2][-]{subsection.2.1.1}{Especificaci\363n Formal de la M\341quina}{section.2.1}
+\BOOKMARK [2][-]{subsection.2.1.2}{Reglas de Reducci\363n de la M\341quina}{section.2.1}
+\BOOKMARK [2][-]{subsection.2.1.3}{Conjunto de Instrucciones de MAPiCO}{section.2.1}
+\BOOKMARK [1][-]{section.2.2}{Dise\361o Actual}{chapter.2}
+\BOOKMARK [2][-]{subsection.2.2.1}{Alternativas de Dise\361o}{section.2.2}
+\BOOKMARK [2][-]{subsection.2.2.2}{Caracter\355sticas del Dise\361o Actual}{section.2.2}
+\BOOKMARK [2][-]{subsection.2.2.3}{Estados de la M\341quina Actual}{section.2.2}
+\BOOKMARK [2][-]{subsection.2.2.4}{Diagrama de Transiciones de la M\341quina Actual}{section.2.2}
+\BOOKMARK [2][-]{subsection.2.2.5}{Reglas de Reducci\363n de la M\341quina}{section.2.2}
+\BOOKMARK [2][-]{subsection.2.2.6}{Conjunto de Instrucciones de MAPiCO}{section.2.2}
+\BOOKMARK [1][-]{section.2.3}{An\341lisis de Cambios entre la Versi\363n Anterior y la Versi\363n Actual de MAPiCO}{chapter.2}
+\BOOKMARK [1][-]{section.2.4}{Sistema de Restricciones y Eliminaci\363n de \040Variables}{chapter.2}
+\BOOKMARK [0][-]{chapter.3}{API REST}{}
+\BOOKMARK [1][-]{section.3.1}{Provisioning API conceptos}{chapter.3}
+\BOOKMARK [1][-]{section.3.2}{Provisioning API data model}{chapter.3}
+\BOOKMARK [0][-]{chapter.4}{IMPLEMENTACION DE LA MAQUINA ABSTRACTA}{}
+\BOOKMARK [1][-]{section.4.1}{Estructuras de Datos}{chapter.4}
+\BOOKMARK [1][-]{section.4.2}{Estructura de un Proceso}{chapter.4}
+\BOOKMARK [1][-]{section.4.3}{Estructura de los PlugIn's}{chapter.4}
+\BOOKMARK [1][-]{section.4.4}{Bloque Principal de la M\341quina}{chapter.4}
+\BOOKMARK [1][-]{section.4.5}{Implementaci\363n de Instrucciones}{chapter.4}
+\BOOKMARK [1][-]{section.4.6}{M\363dulos Din\341micos - Extensi\363n de Instrucciones}{chapter.4}
+\BOOKMARK [1][-]{section.4.7}{Complejidades de Funciones}{chapter.4}
+\BOOKMARK [0][-]{chapter.5}{PRUEBAS Y RESULTADOS}{}
+\BOOKMARK [1][-]{section.5.1}{FACTORIAL}{chapter.5}
+\BOOKMARK [1][-]{section.5.2}{SMM: SEND + MORE = MONEY}{chapter.5}
+\BOOKMARK [1][-]{section.5.3}{NREINAS}{chapter.5}
+\BOOKMARK [0][-]{chapter.6}{CONCLUSIONES}{}
+\BOOKMARK [0][-]{chapter.7}{RECOMENDACIONES}{}
+\BOOKMARK [0][-]{chapter*.6}{Bibliograf\355a}{}
+\BOOKMARK [0][-]{chapter*.6}{ANEXOS}{}

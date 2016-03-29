@@ -1,0 +1,459 @@
+\lstset{language=C, basicstyle=\fontfamily{phv}\fontseries{m}\selectfont\footnotesize}
+
+\begin{anexo}{1}{Anexo A. Uso y Gu'ia de Implantaci'on de la M'aquina Abstracta \emph{MAPiCO}}
+\label{anexo1}
+\emph{MAPiCO} ha sido desarrollado utilizando los estándares establecidos por \textbf{GNU} para el ordenamiento de proyectos, herramientas como $automake$ y $autoconf$ ayudan a la portabilidad de la máquina a nivel de código fuente, abstray'endose en la medida de lo posible, de las versiones de las herramientas tradicionales disponibles en cada sistema operativo.\\
+\\
+\emph{MAPiCO} se encuentra empaquetada y cuenta con un script llamado $configure$, el cual al ejecutarse realiza todas las verificaciones y definiciones necesarias para que la máquina se pueda compilar y posteriormente instalar con éxito.\\
+\\
+En la figura \ref{EstructuraDirectorios} se muestra el árbol con el contenido de los directorios y archivos de la máquina:
+
+El directorio raiz contiene los archivos que permiten mantener control sobre el proyecto.
+\begin{itemize}
+\item Carpeta \textbf{asmapico}: Contiene los fuentes del Assembly \emph{MAPiCO} que permite generar el c'odigo en bytes de entrada de la m'aquina.
+\item Carpeta \textbf{constsys}: Incluye el código fuente del sistema de restricciones utilizado.
+\item Carpeta \textbf{doc}: En esta carpeta se ubican los archivos de configuraci'on de la máquina.
+\item Carpeta \textbf{include}: Contiene las cabeceras de las librerías que requiere \emph{MAPiCO} (PlugIns.h, Parameters.h, Loader.h, etc.).
+\item Carpeta \textbf{mapico}: Almacena el c'odigo fuente de la m'aquina y de todas las librer'ias implementadas (MAPiCO.c, PlugIns.c, BinaryTree.c, etc.).
+\item Carpeta \textbf{PlugIn's}: Incluye el c'odigo de los $PlugIn's$ desarrollados.
+\end{itemize}
+
+Los archivos de información obligatorios son:
+\begin{itemize}
+\item \emph{NEWS}: Registra los cambios mas recientes.
+\item \emph{README}: Contiene la descripción del proyecto.
+\item \emph{MAPiCO}: Incluye algunas instrucciones especiales.
+\item \emph{AUTHORS}: Contiene los nombres de los autores de la máquina.
+\item \emph{CHANGELOG}: Contiene un registro con todos los cambios que se han efectuado. 
+\item \emph{COPYING}: Aqu'i se especifica el tipo de licencia sobre el cual se definió la máquina.
+\item \emph{INSTALL}: Proporciona todas las instrucciones de instalación de \emph{MAPiCO}.
+\end{itemize}
+ 
+\begin{figure*}[!h]
+\begin{center}
+\includegraphics[angle=0,width=3cm]{EstructuraDirectorios.eps} 
+\caption{\label{EstructuraDirectorios} Estructura de Directorios \emph{MAPiCO}}
+\end{center}
+\end{figure*}
+
+La ejecución de la nueva \emph{MAPiCO}, se realizó a través de línea de comandos y requiere como argumento el archivo de entrada o $bytecodes$ en el momento de la invocación.
+\\
+La implementaci'on se realizó en \emph{lenguaje C}, la forma de invocaci'on es la siguiente: \\
+\\
+./mapico program.mapico\\
+\\
+En donde program.mapico denota un archivo binario con el programa a ejecutar. Este programa tiene la estructura presentada en la sección \ref{quintaalternativa}.
+
+Para la reimplementación de la máquina abstracta \emph{MAPiCO}, se tuvieron en cuenta las siguientes utilidades:
+\begin{itemize}
+\item Utilidad $make$ de $GNU$.
+\item El preprocesador $cpp$ de $GNU$ ($The \ GNU \ C-Compatible \ Compiler \ Preprocessor$).
+\item El compilador $gcc$. 
+\item La herramienta $doxygen$ para generar la documentación de la implementación en formato HTML.
+\item Las herramientas $Autotools$ de $GNU$ que generan los scripts de configuraci'on. 
+\end{itemize} 
+
+El código fuente de \emph{MAPiCO} se encuentra en: $http://gforge.puj.edu.co/projects/mapico2$, desde esa dirección se puede descargar la 'ultima versi'on de la M'aquina Abstracta \emph{MAPiCO}.
+
+Para compilar la máquina abstracta \emph{MAPiCO} se debe invocar las siguientes instrucciones:
+
+\begin{verbatim}
+tar zxvf mapico2-X.Y.Z.tar.gz 
+./configure
+make
+make install
+\end{verbatim}
+donde $X.Y.Z$ es la versi'on de \emph{MAPiCO} (al momento de la elaboraci'on de este documento se encuenra en la versi'on 0.0.1).\\\\
+La primera línea descarga los archivos fuente de la M'aquina Abstracta, la segunda l'inea ejecuta el script llamado $configure$, que comprueba si el sistema dispone de todos los recursos necesarios para compilar \emph{MAPiCO}: (librerías, compilador, etc.) y genera el archivo $Makefile$.\\\\
+Para obtener par'ametros adicionales ejecutar:
+\begin{verbatim}
+./configure --help
+\end{verbatim}
+
+La invocación de $make$ busca el $Makefile$ creado por $configure$ y compila el código fuente de \emph{MAPiCO} de 
+acuerdo a sus dependencias, generando las librerias din'amicas de la máquina y el ejecutable de la misma.\\
+
+La tercera línea instala \emph{MAPiCO} en el sistema operativo para que pueda ser utilizado desde cualquier parte.
+
+\end{anexo}
+
+\begin{anexo}{2}{Anexo B. Guía de Adici'on de PlugIn's - Extensibilidad}
+\label{anexo2}
+Los $PlugIn's$ en \emph{MAPiCO} son archivos en \emph{C} los cuales no necesitan archivo de cabecera $.h$, la estructura de un $PlugIn$ es la siguiente:
+
+\begin{center}
+\begin{tabular}{|p{7cm}|}
+\hline
+Librer'ias de cabecera\\
+\hline
+Funci'on Catalogo\\
+\hline
+Conjunto de Instrucciones\\
+\hline
+\end{tabular}
+\end{center}
+
+Las librerías de cabecera estándar de un \emph{PlugIn MAPiCO} son: \emph{Proceso.h}, \emph{Loader.h} y \emph{PlugIns.h}. \emph{PlugIns.h} es de uso obligatorio porque es la que ofrece las funciones para el manejo y/o control de los $PlugIn's$ y las instrucciones, en estas se pueden incluir las librerías que se requieran para la ejecución de una instrucción. 
+
+\begin{lstlisting} 
+
+#include "Proceso.h" 
+#include "Loader.h"
+#include "PlugIns.h"
+#include "StoreMA.h"
+\end{lstlisting} 
+
+
+En cada \emph{PlugIn MAPiCO} debe definirse la función catalogo (\emph{Catalogue}) que ofrece la información de instrucciones del $PlugIn$. A continuación se presenta un ejemplo:
+
+\begin{lstlisting} 
+
+1.Parameters Catalogue(Parameters argv,char *PathLibrary,void *Handle,int NumPlugIn)
+2.{
+3.  char *Functions[]={"13:NEWV","14:PAR","15:FINISH","16:FUNC",NULL};
+4.      
+5.  //Cargar las instrucciones del PlugIn
+6.  argv = loadInstructions(argv, Functions, PathLibrary, Handle, NumPlugIn);
+7.   
+8.  return argv;   
+9.}
+\end{lstlisting} 
+
+
+En donde:
+\\\\
+L'inea 1: \emph{Catalogue} recibe como argumentos $argv$ que corresponde a la lista de \mbox{parámetros} creada por la máquina en el bloque principal, \emph{PathLibrary} que contiene la ruta física donde se encuentra el $PlugIn$; \emph{Handle} es el apuntador al $PlugIn$ y \emph{NumPlugIn} que corresponde a un consecutivo que identifica la librería dinámica. 
+
+Línea 3: La función \emph{Catalogue} define un arreglo de cadenas que describe la información de las instrucciones que contiene el $PlugIn$, las cadenas son de la forma $OpCode:NameInstruction$ donde $OpCode$ es el código de la instrucción y $NameInstruction$ como lo indica es el nombre de la instrucción que viene en el $PlugIn$, se pueden definir el número de instrucciones que se desee, se le indica a la m'aquina que el $PlugIn$ define $NEWV$, $PAR$, $FINISH$, $FUNC$, $CALL$, $DEL$ y $COMM$, las cuales deben estar implementadas de lo contrario la m'aquina reportara un error, indicando que la instrucci'on no ha sido encontrada.
+
+La carga de las instrucciones se realiza mediante la funci'on \emph{loadInstructions} (l'inea 6) definida en la librer'ia \emph{PlungIns.h}, la cual llena el 'arbol de instrucciones y lo guarda en la lista de par'ametros, retornando la lista a la ejecuci'on de la m'aquina (l'inea 8).
+
+Una instrucci'on recibe como argumento la lista de par'ametros de la m'aquina y la retorna con las modificaciones que resultaron de la ejecuci'on de la instrucci'on, las instrucciones son de la forma:
+
+\begin{lstlisting} 
+
+Parameters NameInstruction(Parameters argv)
+{
+   <Obtencion de parametros>      
+   <Acciones>
+   <Retorno de Parametros>
+}
+\end{lstlisting} 
+
+
+Ejemplo: 
+
+\begin{lstlisting} 
+
+1. Parameters PAR(Parameters argv)
+2. {
+3.   //Registro que se necesita de MAPiCO
+4.   int PCA;             //Puntero a Codigo Actual
+5.   NodeList PVA;        //Puntero a Variables Actual
+6.   NodeList PMA;        //Puntero a Metodos Actual
+7.   Auxiliar PAA;        //Puntero a Argumentos Actual
+8.   ObjectEval POA;      //Puntero a Objetos Actual
+9.   Auxiliar PAUX;       //Puntero Auxiliar
+10.  void *PTEMP;         //Puntero Temporal  
+11.
+12.  //Declaracion de colas
+13.  List RunQ;           //Cola de Ejecucion
+14.
+15.  //Declaracion de la direccion de PAR
+16.  int DirPar = 0;
+17.
+18.  //Vble para definir procesos
+19.  Proceso Proc;
+20.  Proceso ProcPar;
+21.
+22.  //Vble para el Program Byte
+23.  Program Data;
+24.
+25.  //Recuperacion del primer parametro (Proceso)
+26.  Proc = getAtVblePlugIn(argv,1);
+27.
+28.  //Recuperacion del tercer parametro (Data)
+29.  Data = getAtVblePlugIn(argv,3); 
+30.
+31.  //Recuperacion de la cola de ejecucion (RunQ)
+32.  RunQ = getAtVblePlugIn(argv,4);
+33.
+34.  //Se recuperan los valores de los registros
+35.  PCA = getPC(Proc);
+36.  PVA = getPV(Proc);
+37.  PMA = getPM(Proc);
+38.  PAA = getPA(Proc);
+39.  POA = getPO(Proc);
+40.  PAUX = getPAUX(Proc);
+41.
+42.  DirPar = get32(Data, PCA+1);
+43.  
+44.  //Insercion de un nuevo proceso en RunQ
+45.  ProcPar =  newProceso(DirPar, PVA, PMA, PAA, POA, PAUX, NULL);
+46.  INSERT_AT_END(RunQ, ProcPar);
+47.  
+48.  //Incrementar el PCA para la siguiente instruccion
+49.  PCA = PCA + INST_BYTE + DIR_BYTE;
+50.
+51.  //Asignacion de los nuevos valores
+52.  setPC(Proc, PCA);
+53.
+54.  //Se guardan las variables en la lista de vbles de los PlugIn's
+55.  argv = setAtVblePlugIn(argv,Proc,1);
+56.  argv = setAtVblePlugIn(argv,RunQ,4);
+57.
+58.  //Retorno de los argumentos
+59.  return argv;
+60.}
+\end{lstlisting} 
+
+
+En esta instrucci'on en el rango de l'ineas 3 a 23 se definen las variables que necesitar'a la instrucci'on, la recuperaci'on de variables de la lista de par'ametros se realiza entre las l'ineas 26 a 40, la acci'on de la instrucci'on se realiza entre las l'ineas 42 a 49 y por 'ultimo la asignaci'on y retorno de variables a la lista de par'ametros se considera entre las l'ineas 52 y 59.
+
+\end{anexo}
+
+\begin{anexo}{3}{Anexo C. Guía de Cambios con Respecto a la Interfaz con el Sistema de \mbox{Restricciones}}
+\label{anexo3}
+\emph{MAPiCO} interactúa con el \emph{Store} a trav'es de la interfaz \emph{StoreMA.h}, 'Esta reimplementaci'on utiliz'o el Sistema de Restricciones Aritm'etico de Dominios Finitos hecho en $C$ \cite{garcia.vasquez:sis-res-dom-finito}. Para cambiar el Sistema de Restricciones solamente se debe modificar la interfaz implementando las mismas funciones que se ofrecen actualmente, esto con el objetivo de no modificar ninguna de las instrucciones.
+
+Los cambios que deben realizarse para cambiar el Sistema de Restricciones son:
+\flushleft
+\begin{enumerate}
+\item En \emph{StoreMA.h}
+\begin{itemize}
+\item Incluir las librer'ias del nuevo Sistema de Restricciones Aritm'etico
+\\
+Ejemplo: 
+\\
+\begin{lstlisting} 
+
+#include "FrameConst.h"
+#include "CS.h"
+...
+\end{lstlisting} 
+
+
+\item Definir las constantes propias de  \emph{MAPiCO} (que tienen el sufijo \_MA) con base en las del nuevo Sistema Aritm'etico.
+\\
+Ejemplo:
+\\
+\begin{lstlisting} 
+
+//Declaracion  de Constantes y Macros publicos
+#define SUCCESS_MA SUCCESS
+#define FAIL_MA    FAIL
+#define ASK_MA     ASK
+#define TELL_MA    TELL
+...
+\end{lstlisting}  
+
+ 
+\item Modificar la estructura \emph{str\_StoreMA} colocando el nuevo Sistema de Restricciones y las variables de inicializaci'on que necesite (si es que las hay).
+
+\item Definir los tipos propios de  \emph{MAPiCO} (que tienen el sufijo \_MA) con base en los del nuevo sistema aritmetico.
+\\
+Ejemplo:
+\\
+\begin{lstlisting}
+
+typedef FrameConst FrameConstMA;
+...
+\end{lstlisting}  
+
+
+\item Agregar las funciones adicionales que se necesiten para interactuar con el nuevo Sistema de Restricciones.
+\end{itemize}
+
+\item En \emph{StoreMA.c}
+\begin{itemize}
+\item En la funci'on de inicializaci'on del \emph{store}, reservar memoria a la estructura e inicializar sus par'ametros asignando los mensajes de error correspondientes si los hay.
+\\
+Ejemplo:
+
+\begin{lstlisting}
+
+StoreMA inicStoreMA(void)
+{
+  StoreMA newStore;
+  //Asignacion de memoria para la estructura
+  newStore = (StoreMA)malloc(sizeof(struct str_StoreMA));        
+  //Asignacion de memoria para las variables del store
+  newStore->i = (Indexicals *)malloc(sizeof(Indexicals));
+  newStore->indextemp = (int *)malloc(sizeof(int));   
+  newStore->t=(Stamp *)malloc(sizeof(Stamp));
+  //Inicializacion de variables
+  newStore->i = InicIndexicals();;
+  newStore->s = inicStore();
+      
+  if(!newStore->indextemp)
+  {
+    newStore->Error = (char *)malloc(sizeof(char)*100);
+    strcpy(newStore->Error,"Fallo la asignacion de memoria (Index_Temp)");      
+    newStore->Response = StoreERR;      
+    return newStore;
+  }
+  *(newStore->indextemp)=-1;
+      
+  if(!newStore->t)
+  {
+    newStore->Error = (char *)malloc(sizeof(char)*100);
+    strcpy(newStore->Error, "Fallo la asignacion de memoria (Stamp)");      
+    newStore->Response = StoreERR;         
+    return newStore;                  
+  }
+  *(newStore->t)=0;
+
+  //Inicializacion del Store Correcta
+  newStore->Response = StoreOK;
+  newStore->inicializado = StoreOK;
+  return newStore;   
+}
+%\end{lstlisting}
+  
+
+\newpage
+
+\item Para cada funci'on realizar la llamada correspondiente en el nuevo Sistema de Restricciones, pasandole los par'ametros necesarios.
+\\
+Ejemplo:
+\begin{lstlisting}  
+
+StoreMA tellMA(StoreMA store, FrameConstMA frameconst)
+{
+  tell(store->s, store->i, store->t, store->indextemp, frameconst);      
+  return store;
+}
+...
+\end{lstlisting}  
+
+\end{itemize}
+\end{enumerate}
+
+\end{anexo}
+\begin{anexo}{4}{Anexo D. Assembly MAPiCO}
+\label{anexo4}
+El \emph{Assembly MAPiCO} es una programa que se encarga de traducir, un archivo fuente en formato texto a un archivo de salida en formato binario. Este archivo de salida contiene el c'odigo que \emph{MAPiCO} ejecuta ($bytecode$). Este \emph{Assembly} surgió de la necesidad de tener una herramienta que generara el archivo binario de entrada de \emph{MAPiCO}, debido a que el compilador \emph{PiCO - MAPiCO} que debería proporcionarlo, se encuentra actualmente en desarrollo (ver figura \ref{AssemblyMAPiCO}); igualmente era necesario desarrollar un conjunto de pruebas de la m'aquina con base en los archivos de entrada. La realizaci'on de este archivo binario se realiza en forma manual.\\
+
+\begin{figure*}[!h]
+\begin{center}
+\includegraphics[angle=0,width=8cm]{AssemblyMAPiCO.eps}
+\caption{\label{AssemblyMAPiCO} Componentes del Lenguaje \emph{Cordial}}
+\end{center}
+\end{figure*}
+
+Esta herramienta no reemplaza el compilador debido a que el \emph{Assembly MAPiCO} es un tipo de ensamblador b'asico, de bajo nivel, y su tarea consiste en reconocer las directivas de \emph{MAPiCO} y transformarlas a su equivalente código de operación u $OpCode$ en formato binario; adem'as el \emph{Assembly} resuelve las direcciones de las instrucciones mediante un parámetro que hace referencia a una posici'on de memoria en el archivo texto.\\
+\\
+El archivo fuente que el \emph{Assembly} convierte a binario, es una transformaci'on equivalente de código \emph{PiCO} a \emph{MAPiCO} (en modo texto), con la variante de que las instrucciones son identificadas por su nombre y las direcciones corresponden al número de línea en el archivo texto donde se encuentran las instrucciones que se quieren referenciar. Realizar manualmente este archivo de entrada es relativamente fácil.\\ 
+\\
+El siguiente es un fragmento de un archivo de entrada del \emph{Assembly MAPiCO}:
+
+\begin{lstlisting}  
+1.  INIT
+2.  NEWV
+3.  NEWV
+4.  PAR 52
+5.  FUNC 17
+6.  POP
+7.  ATOM MAY 2
+8.  TERMV 0
+9.  TERMC 0
+10. ASKF
+11. PUSHV 0
+12. CALL
+13. POP
+14. COMM
+15. PUSHM 0
+16. REE
+17. FUNC 25
+18. NEWV
+
+...
+
+\end{lstlisting}  
+
+En la l'inea 5, el parámetro de la instrucci'on \emph{FUNC}, hace referencia a una direcci'on que corresponde al número de la línea donde se encuentra la próxima instrucci'on a ejecutar. En el anterior ejemplo \emph{FUNC} esta apuntando a la línea 17 donde se encuentra otra instrucci'on \emph{FUNC}.\\
+\\
+El \emph{Assembly} es un programa hecho en \emph{C}, que utiliza librer'ias $XML$ para su procesamiento y recibe dos parámetros de entrada: un archivo de configuraci'on $XML$ y un archivo fuente en formato texto. \\
+\\
+El archivo de configuraci'on $XML$ contiene la descripci'on de las instrucciones y los c'odigos de los predicados de las restricciones.\\
+\\
+Para describir una instrucci'on se debe crear un tag $XML$ que debe contener el nombre de la instrucci'on y los atributos $OpCode$ y $NumParams$; el $OpCode$ es el equivalente numérico del nombre de la instrucci'on y $NumParams$ es el número de argumentos que tiene la instrucci'on. Con respecto a lo anterior, si la instrucci'on no tiene parámetros se le asigna a $NumParams$ el valor cero (0).\\
+
+\begin{lstlisting}  
+<RET OpCode="12" NumParams="0"/> 
+<NEWV OpCode="13" NumParams="0"/>
+<POP OpCode="7" NumParams="0"/>      
+<ASK OpCode="24" NumParams="0"/>    
+<TELL OpCode="23" NumParams="0"/>        
+<CALL OpCode="17" NumParams="0"/>
+\end{lstlisting}  
+
+Si la instrucci'on tiene parámetros, dentro del tag se crea otro tag con el nombre \textbf{Params} y en su interior se colocan tantos parámetros como lo indique el atributo \emph{NumParams}.\\
+
+\begin{lstlisting}  
+<COBJCC OpCode="11" NumParams="3">
+   <Params>
+      <Param1 Tipo="D" TamBytes="32"/>
+      <Param2 Tipo="D" TamBytes="32"/>
+      <Param3 Tipo="C" TamBytes="8"/>                  
+   </Params>
+</COBJCC>      
+
+<ATOM OpCode="22" NumParams="2">
+   <Params>
+      <Param1 Tipo="P" TamBytes="16"/>
+      <Param2 Tipo="C" TamBytes="16"/>
+   </Params>
+</ATOM>
+\end{lstlisting}  
+
+Cada parámetro debe tener dos atributos que definen su comportamiento: el \textbf{Tipo} y el \textbf{TamBytes}.
+\begin{itemize}
+\item \textbf{Tipo}: puede ser de Direcci'on (\textbf{D}) que hace referencia a una direcci'on en el archivo o Predicado (\textbf{P}) que indica que es un predicado de una restricci'on ó Constante (\textbf{C}) para valores estáticos. 
+\item \textbf{TamBytes}: Indica es el tamaño en bytes del parámetro.
+\end{itemize}
+Los predicados basicamente contienen su $OpCode$ equivalente.\\
+\\
+Un ejemplo de un archivo de configuraci'on en $XML$ es:\\
+
+\begin{lstlisting}  
+<?xml version="1.0"?>
+<Configuration>
+   <Instructions>
+      <RET OpCode="12" NumParams="0"/> 
+          
+      <METH OpCode="6" NumParams="2">
+         <Params>
+            <Param1 Tipo="C" TamBytes="8"/>
+            <Param2 Tipo="D" TamBytes="32"/>
+         </Params>
+      </METH>             
+      
+      <TERMF OpCode="26" NumParams="2">
+         <Params>
+            <Param1 Tipo="P" TamBytes="16"/>
+            <Param2 Tipo="C" TamBytes="16"/>
+         </Params>
+      </TERMF>       
+      
+      ...
+      
+   </Instructions>  
+   
+   <Predicates>
+      <IGUAL Code="28"/>
+      <EQ Code="28"/>
+      <DIF Code="1"/>
+
+      ...
+   
+   </Predicates>
+   
+</Configuration>                  
+\end{lstlisting}  
+\end{anexo}
+
+
+
+
+

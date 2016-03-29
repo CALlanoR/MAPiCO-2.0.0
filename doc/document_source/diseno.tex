@@ -1,0 +1,921 @@
+\chapter{Janu: Framework para aprovisionamiento de soluciones virtuales}
+\label{capdisejanu}
+
+\section {Diseño Inicial de Janu}
+
+La primera implementación de la Máquina Abstracta \emph{MAPiCO} \cite{buss.heredia:mapico} se realizó con base en la especificación y reglas de reducción de la primera definición del Cálculo \emph{PiCO} \cite{pico-ant}.\\\\
+Cuenta con las siguientes características:
+\begin{enumerate}
+\item  Dos areas de Memoria:
+\begin{itemize}
+\item Memoria Estática: Almacena las instrucciones
+\item Memoria Dinámica: Utilizada para tener las traducciones o ligaduras de \mbox{variables} y nombres al \emph{Store}. Almacena los parámetros para el llamado de métodos y es donde se crea el árbol sintáctico que describe a las restricciones.
+\end{itemize}
+
+\item Cuatro Colas:
+\begin{itemize}
+\item RunQ: Cola de procesos listos para ejecución ({\bf Rq}).
+\item ObjQ: Cola de objetos suspendidos ({\bf Oq}).
+\item MsgQ: Cola de mensajes suspendidos ({\bf Msq}).
+\item AskQ: Cola de procesos ask suspendidos ({\bf Aq}).
+\end{itemize}
+\item Un \emph{store} (S): Almacenamiento de la información global (restricciones). Este \emph{store} no hace parte de \emph{MAPiCO}, pero la m'aquina interactua activamente con él.
+
+\item Procesos: Estructuras conformadas por:
+\begin{itemize}
+\item {\bf PC}: Puntero al código de instrucciones
+\item {\bf PV}: Puntero a variables. Apunta al primer elemento en la memoria de traducción de la lista de ligaduras de variables dentro del \emph{Store}.
+\item {\bf PN}: Puntero a nombres. Apunta al primer elemento en la memoria de traducción de la lista de ligaduras de nombres dentro del \emph{Store}.
+\item {\bf PA}: Puntero auxiliar. Tiene dos usos:\\
+ a). Apunta a una lista con los argumentos y al objeto receptor al darse una comunicación.\\
+ b). Guarda referencia a nodos en la creación de un árbol sintáctico que define una restricción.
+\end{itemize}
+\item Registros Internos: Son registros de uso espec'ifico que guardan la informaci'on de la memoria y procesos. La m'aquina modifica esta informaci'on para actualizar procesos y colas.
+\begin{itemize}
+\item {\bf PCA}: Puntero a código actual. Apunta a la instrucci'on actual que se este ejecutando en la m'aquina.
+\item {\bf PVA}: Puntero a variable actual. Apunta al PV del proceso en ejecuci'on.
+\item {\bf PNA}: Puntero a nombre actual. Apunta al PN del proceso en ejecuci'on.
+\item {\bf PAA}: Puntero auxiliar actual. Apunta al PA del proceso actual del proceso que se esta ejecutando.
+\item {\bf PAUX}: Puntero auxiliar. Utilizado para manipulaci'on y ejecuci'on de procesos.
+\end{itemize}
+\end{enumerate}
+
+\subsection{Especificación Formal de la Máquina}
+
+Se realizó una simplificación en la primera definición del Cálculo \emph{PiCO} para mejorar la eficiencia de la máquina. Se restringió el operador de replicacion $*P$, haciendo que $P$ solo pueda ser un proceso normal (Ver definición en \cite{buss.heredia:mapico}).
+
+\subsection{Reglas de Reducción de la Máquina}
+Estas reglas siguen la semántica operacional del Cálculo \emph{PiCO} (ver secci'on \ref{semanticaAnt}). Se especifican reglas de transición entre configuraciones y estados. A continuaci'on se hará una descripción conceptual de cada una de las reglas definidas en la primera implementación; la descripción formal completa se muestra en \cite{buss.heredia:mapico}.\\
+\\
+$Sched$: Permite la continuación de los procesos en ejecución, removiendo el proceso actual y adicionando el siguiente proceso en la cola de ejecución para reducirlo.\\\\
+$Newref$: Permite la creación de nuevas referencias de nombres/variables ejecutadas por el sistema.\\\\
+$Parallel$: Describe la composición paralela $P | Q$.\\\\
+$Tell$: Describe la reducción del proceso tell $! \phi P$\\\\
+Tomando en consideraci'on la restricci'on $\phi (\widetilde{L})$ en la reducción del proceso ask $? \phi P$, se establecen tres posibles casos:
+\begin{itemize}
+\item $Ask1$: Hace referencia al caso en el que del \emph{Store} se deduce $\phi (\widetilde{L})$ continuando con la ejecución del proceso $P$.
+\item $Ask2$: Caso en el que del \emph{Store} se deduce $ \neg \phi  (\widetilde{L})$, eliminando el proceso actual.
+\item $Ask3$: Si del \emph{Store} no se puede deducir $\phi (\widetilde{L})$ ni  $ \neg \phi  (\widetilde{L})$, el proceso es suspendido y pasado a la cola $AskQ$.
+\end{itemize}
+$MsgEnq$: Hace referencia a la suspensión de mensajes debido a la reducción del paso de mensajes a un objeto que no se encuentra en la cola $ObjQ$.\\\\
+$MsgComm$: Describe la comunicación de los procesos mensaje cuando hay un proceso objeto en la cola $ObjQ$ que cumple con los requisitos para la comunicación.\\\\
+$MsgDel$: Consiste en la delegación/reenvío de procesos mensaje, cuando existe el proceso objeto para comunicarse, pero no existe el método requerido.
+
+\newpage
+\subsection{Conjunto de Instrucciones de MAPiCO}
+
+Se defini'o un conjunto de instrucciones clasificados en tres grupos: el primero para la manipulaci'on de procesos (Tabla \ref{ConInstAnt}), el segundo para la definici'on de objetos (Tabla \ref{InstObjAnt}) y el 'ultimo para la construcci'on de predicados de primer orden (Tabla \ref{InstPredAnt}).\\\\
+Estas instrucciones estaban representadas por un c'odigo de operaci'on y de 0 a 3 par'ametros. Las tablas \ref{ConInstAnt} y \ref{InstObjAnt} guardan la siguiente representaci'on:
+
+\begin{itemize}
+\item opcode: C'odigo de operaci'on de la instrucci'on, 8 bits.
+\item dir: Direcci'on valida en la memoria del programa, 32 bits.
+\item ind: 'Indice dentro de alguna de las listas apuntadas por PV, PN, 16 bits.
+\item num: N'umero constante. Para objetos especifica el n'umero de m'etodos; para m'etodos y mensajes especifica su nombre o referencia, 16 bits.
+\end{itemize}
+
+\textbf{Forma de realizar un llamado (env'io de mensajes)}: Luego de una instrucci'on \emph{replicate} siempre debe ir un \emph{call} y antes de hacer un \emph{call} o un \emph{replicate}, el usuario siempre debe especificar el objeto receptor con \emph{pushn} o \emph{pushv}.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{||l|l|l|p{7.5cm}||}\hline
+\textbf{Instrucci'on} & \textbf{Opcode} & \textbf{Src1} &  \textbf{Descripci'on} \\ \hline 
+ret & 0 &  & Es el proceso NIL en el c'alculo \\ \hline 
+par & 1 & dir & Crea un nuevo porceso apuntado por Src1 para er ejecutado en paralelo \\ \hline 
+newv & 2 &  & Definici'on de una nueva variable. \\ \hline 
+newn & 3 &  & Definici'on de un nuevo nombre. \\ \hline 
+pushv & 4 & ind & Pone  variables en el PA para ser pasadas como argumentos en comunicaci'on de \mbox{objetos}. \\ \hline 
+pushn & 5 & ind & Pone  nombres en el PA para ser pasadas como argumentos en comunicaci'on de \mbox{objetos}. \\ \hline 
+replicate & 7 &  & Cuando est'a antes de una instrucci'on call, replica este mensaje \\ \hline 
+pop & 18 &  & Saca el primer elemento de la pila apuntada por PA para que pase a ser una variable o nombre seg'un el caso. \\ \hline 
+call & 20 & num & Hace el llamado al m'etodo Scr1 en un \mbox{objeto} igual (en el \emph{Store}) a la variable o nombre enla cabeza del PA. \\ \hline 
+tell & 24 &  & Adiciona al \emph{store} la restricci'on apuntada por PA. \\ \hline 
+ask & 25 &  & Realiza la operaci'on ask al \emph{store} de una restricci'on apuntada por PA. \\ \hline 
+\end{tabular}
+\caption{Instrucciones para la Manipulaci'on de Procesos en la M'aquina - Versi'on Anterior\label{ConInstAnt}}
+\end{center}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{||l|l|l|l|l|p{5.5cm}||}\hline
+\textbf{Instrucci'on} & \textbf{Opcode} & \textbf{Src1} &  \textbf{Src2} &  \textbf{Src3} & \textbf{Descripci'on} \\ \hline 
+objvv & 64 & ind  & ind & num & Objeto con nombre Scr1, \mbox{delegaci'on} Src2 y con Src3 m'etodos. (Sc1 Src2 son indices dentro del PV)\\ \hline 
+objnn & 65 & ind & ind & num & Igual a objvv pero Sc1 y Src2 son nombres dentro del PN\\ \hline
+objvn & 66 & ind & ind & num & Igual a objvv pero Sc1 es una variable dentro del PV y Src2 un nombre dentro del PN\\ \hline 
+objnv & 67 & ind & ind & num & Igual a objvv pero Sc1 es un nombre dentro del PN y Src2 una variable dentro del PV\\ \hline
+objvvr & 72 & ind & ind & num & Igual a objvv pero clonado\\ \hline
+objnnr & 73 & ind & ind & num & Igual a objnn pero clonado\\ \hline
+objvnr & 74 & ind & ind & num & Igual a objvn pero clonado\\ \hline
+objnvr & 75 & ind & ind & num & Igual a objnv pero clonado\\ \hline
+meth & 80 & num & dir & &  Especifica que el m'etdo Scr1 esta en la direcci'on Src2 \\ \hline 
+\end{tabular}
+\caption{Instrucciones para la Definici'on de Objetos de la M'aquina - Versi'on Anterior\label{InstObjAnt}}
+\end{center}
+\end{table}
+
+Los predicados de primer orden son los que especifican las restriciones en \emph{PiCO}. 'Estos estan definidos seg'un la sint'axis de la Tabla \ref{BnfEspPredAnt} y son modelados en la m'aquina con las instrucciones de la Tabla \ref{InstPredAnt}. Seg'un esto:
+
+\begin{itemize}
+\item opcode: C'odigo de operaci'on de la instrucci'on, 8 bits.
+\item ind: 'Indice dentro de alguna de las listas apuntadas por PV, PN, 16 bits.
+\item num: N'umero constante entero, 16 bits.
+\item fun: C'odigo de la funci'on, 8 bits. Depende del sistema de restricciones.
+\item pred: C'odigo del predicado 'atomo, 8 bits.
+\item ari: Aridad de la funci'on o el 'atomo, 8 bits.
+\item con: C'odigo del conector, las opciones son \emph{and} (0), \emph{or} (1), 8 bits.
+\item cuan: C'odigo del cuantificador o negaci'on, 8 bits.
+\end{itemize}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{l l p{8cm}}
+Sentencia & $\rightarrow$ & Sentencia at'omica\\  
+ & | &  Sentencia Conector Sentencia \\ 
+ & | &  Cuantificador Variable, ... Sentencia \\  
+ & | &  $\neg$ Sentencia  \\ 
+ & | &  (Sentencia)  \\  
+Sentencia at'omica & $\rightarrow$ & Predicado (T'ermino, ...) \\ 
+ & | &  T'ermino = T'ermino  \\ 
+T'ermino & $\rightarrow$ & Funci'on T'ermino, ...) \\
+ & | &  Constante  \\ 
+ & | &  Variable  \\  
+Conector & $\rightarrow$ & $ \wedge | \vee | \Leftrightarrow | \Rightarrow $ \\
+Cuantificador & $\rightarrow$ & $\forall | \exists$ \\
+Constante & $\rightarrow$  & A | X1 | Jhon | ...\\
+Variable & $\rightarrow$  & a | x | s | ...\\
+Predicado & $\rightarrow$  & Antes | En | ...\\
+Funci'on & $\rightarrow$  & Madre | m'inimo | ... \\ 
+\end{tabular}
+\caption{BNF para la especificaci'on de Predicados de Primer Orden - Versi'on Anterior \label{BnfEspPredAnt}}
+\end{center}
+\end{table}
+
+\begin{table}
+\begin{center}
+\begin{tabular}{||l|l|l|l|p{7cm}||}\hline
+\textbf{Instrucci'on} & \textbf{Opcode} & \textbf{Src1} &  \textbf{Src2}& \textbf{Descripci'on} \\ \hline 
+termc & 32 & num  &  & T'ermino constante dentro de una f'ormula de primer orden \\ \hline 
+termv & 33 & ind &  &  T'ermino variable dentro de una f'ormula de primer orden. Src1 es la posici'on dentro del PV \\ \hline 
+termn & 34 & ind &  &  T'ermino nombre dentro de una f'ormula de primer orden. Src1 es la posici'on dentro del PN \\ \hline 
+termf & 35 & fun & ari & Funci'on. Src1 es el c'odigo del 'atomo y src2 es la aridad. \\ \hline 
+atom & 36 & pred & ari & Atomo. Scr1 es el c'odigo del 'atomo y Src2 es la aridad. \\ \hline 
+sentenc & 40 & con &  & Sentencia con un conector. Src1 es el c'odigo del conector de aridad 2. \\ \hline 
+setenq & 41 & cuan &  & Sentencia con un cuantificador o negaci'on. Src1 es el c'odigo del cuantificador o de la negaci'on. \\ \hline 
+\end{tabular}
+\caption{Instrucciones para construir Predicados de Primer Orden en la M'aquina - Versi'on Anterior \label{InstPredAnt}}
+\end{center}
+\end{table}
+
+\newpage
+\section {Diseño Actual}
+
+En la secci'on anterior se realiz'o una breve descripci'on de cada uno de los componentes y caracter'isticas del diseño de la primera implementaci'on de la m'aquina abstracta \emph{MAPiCO}.\\
+\\
+En esta secci'on se describir'a las caracter'isticas de la nueva implementaci'on, presentando cada una de las alternativas de diseño, los componentes de la arquitectura, las reglas de reducci'on con base en las modificaciones del c'alculo \emph{PiCO} y la definici'on del conjunto de instrucciones. El diseño de la nueva \emph{MAPiCO} guarda estrecha relaci'on con la definici'on anterior, tomando elementos esenciales que hacen parte de la correcta y formal funcionalidad de una m'aquina abstracta para el c'alculo computacional \emph{PiCO}.
+
+
+\subsection {Alternativas de Diseño} \label{AltDis}
+
+Para establecer el nuevo diseño de \emph{MAPiCO} se evaluaron varias alternativas que pretend'ian seguir las reglas de reducci'on de la m'aquina con base en las modificaciones del c'alculo \emph{PiCO} y de alguna manera permitir una implementaci'on gen'erica y flexible.
+\\\\
+Anteriormente en el C'alculo \emph{PiCO}, los objetos estaban definidos con identificadores, en ese caso durante la ejecuci'on los objetos eran seleccionados de las pilas de variables y nombres y de esta forma era posible la comunicaci'on (Ver secci'on \ref{SintaxisAnt}).
+\\\\
+$(I,J)\triangleright  M$; Objeto $I$ con condici'on de reenvío a $J$. $I,J$ Nombres o Variables
+\\\\
+En el c'alculo actual los objetos se localizan en restricciones $\phi_{sender}$ y $\delta_{forward},$ parametrizadas en variables $sender$ y $forward$, lo que hace necesario su evaluaci'on para determinar una posible comunicaci'on.
+\\\\
+$(\phi_{sender},\delta_{forward}) \ \triangleright M$;  Objeto con condici'on de reenvío
+\\\\
+En el diseño de la nueva m'aquina se tuvo en consideraci'on la actual definici'on de los objetos, por esta raz'on las restricciones se evalúan como si fueran funciones, pero no funciones que hacen parte de la sint'axis del cálculo, sino, como funciones de evaluación de las variables $sender$ y $forward$ respectivamente y la comunicaci'on entre objetos depende del resultado de dicha evaluaci'on.
+\\\\
+Por ejemplo si se tiene la definici'on del siguiente programa en c'alculo \emph{PiCO}, que \mbox{describe} la funci'on de potencia al cuadrado, siendo el primer par'ametro el argumento y el segundo par'ametro el resultado:
+\begin{tabbing}
+\=~~~~~~~~~~~~~~~~~~~~\=~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\=~~~~~~~~~~\\
+\>$(local \ X,\ Y in$ \>  $(clone \ (sender>0,\ forward \leq 0) \ \rhd \ [Sqr(n,r): \ (tell \ r= \ n*n)])$ \\
+\>   \>$| \ X \lhd Sqr(X,Y)$\\
+\>   \>$| \ tell \ X \ = \ 3 )$
+\end{tabbing}
+
+En donde el objeto esta definido por las restricciones $\phi_{sender}$ ($sender>0$), $\delta_{forward}$ ($forward \leq 0$) y tiene dentro de su colecci'on de m'etodos al m'etodo $Sqr$ y el mensaje es enviado a trav'es de la variable $X$.\\\\
+La restricci'on $\phi_{sender}$ podr'ia expresarse en t'erminos de una funci'on $R_{s}$ para evaluar la posible comunicaci'on as'i:
+\\\\
+$R_{s}(X) \equiv \phi_{sender}[sender / x] $\\
+\\
+Si al reemplazar la variable $sender$ por el par'ametro de llamada $X$, satisface la \mbox{restricci'on} $\phi_{sender}$ se verificar'ia la existencia del m'etodo $Sqr$ dentro de la colecci'on de m'etodos del objeto:
+\begin{itemize}
+\item Si existe el m'etodo $Sqr$ se establece la comunicaci'on con el objeto.
+\item Si no existe, la restricci'on $\delta_{forward}$ podr'ia expresarse en t'erminos de una funci'on $R_{f}$ de la siguiente forma:
+\\$R_{f}(Y) \equiv \delta_{forward}[forward / Y] $
+\end{itemize}
+
+A continuaci'on se presentan las alternativas tomadas en cuenta a lo largo del diseño, en algunas de esas alternativas se plantea un \emph{bytecode} o \emph{c'odigo de bytes} basado en instrucciones similares a la de la primera implementaci'on de \emph{MAPiCO} \cite{buss.heredia:mapico}.
+
+\subsubsection{Primera Alternativa}
+
+En esta alternativa se determinan las restricciones $\phi_{sender}$ y $\delta_{forward}$ como funciones $sender$ y $forward$, con etiquetas especificas que enmarcan cada restricci'on y en el momento de realizar la definici'on del objeto se toma en consideraci'on la referencia de dichas etiquetas.
+\\
+Dadas las siguientes funciones $sender$ y $forward$:
+
+$f_{s}(s)\equiv (s>0)$\\
+$f_{f}(f)\equiv (f=0)$
+
+y el siguiente objeto:\\\\
+$Objcc \ XX \ YY$: definición de un objeto que tiene asociado dos funciones $XX$ y $YY$ en donde se realizan los reemplazos correspondientes de las variables $sender$ y $forward$.\\
+La consideración es la siguiente:
+
+\begin{center}
+\begin{tabular}{l l p{12cm}}
+$XX \ def \ f_{s}(s)$ & Definici'on de $XX$ como funci'on en t'erminos de la variable $sender$ \\  
+ & $XX$ es el nombre de la funci'on $sender$ \\ 
+ & $f_{s}$ es la función $sender$ \\  
+ & $s$ es la variable $sender$ \\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{l l p{12cm}}
+$YY \ def \ f_{f}(f)$ & Definici'on de $YY$ como funci'on en t'erminos de la variable $forward$ \\  
+ & $YY$ es el nombre de la funci'on $forward$\\ 
+ & $f_{f}$ es la función $forward$\\  
+ & $f$ es la variable $forward$\\
+\end{tabular}
+\end{center}
+
+En bytecode ser'ia algo as'i:
+
+\begin{tabular}{l l p{12cm}}
+DEFS: & ; Etiqueta de la funci'on $sender$\\
+POP &  ; Pasar el PA al PV\\
+ATOM GREAT 2 &  ; Funci'on > de dos operandos\\
+TERMV 0 &  ; Variable 0 para evaluar $sender$\\
+TERMC 0 &  ; T'ermino constante 0\\
+DEFF: & ; Etiqueta de la funci'on $sender$\\
+POP  & ; Pasar el Pa al PV\\
+ATOM EQ 2  & ; Funci'on = de dos operandos\\
+TERMV 0 &  ; Variable 0 para evaluar $forward$\\
+TERMC 0 &  ; T'ermino constante 0\\ 
+OBJCC DEFS DEFF & ; Definici'on de objeto OBJCC\\
+ & ; DEFS direcci'on etiqueta DEFS,\\
+ & ; DEFF direci'on de etiqueta DEFF\\
+\end{tabular}
+
+Las etiquetas $DEFS$ y $DEFF$ definen las funciones $sender$ y $forward$ respectivamente.\\\\
+Esta alternativa fue descartada porque presenta dificultad en la identificaci'on de funciones $sender$ y $forward$ para cada objeto, aunque es una alternativa sencilla en la representaci'on de restricciones no brinda la soluci'on completa  en la identificaci'on y comunicaci'on de procesos.
+
+\subsubsection{Segunda Alternativa}
+
+La segunda alternativa contempla la definición de las funciones $sender$ y $forward$ \mbox{como} condicionales, en donde la primera guarda es la restricci'on $\phi_{sender}$ y la guarda de delegaci'on es la restricci'on  $\delta_{forward}$. De esta manera al realizar los reemplazos de la variable $sender$ y satisfacer la restricci'on $\phi_{sender}$ pero no encontrar el m'etodo respectivo, se procede a ejecutar $\delta_{forward}$. El resultado de la evaluaci'on de las restricciones $\phi_{sender} / \delta_{forward}$ se guarda en un registro de la m'aquina.
+
+\begin{center}
+\begin{tabular}{l l lp{12cm}}
+if $s(\phi)$ then P  &    &      if  $\phi(sender)$ then P\\
+else $f(\delta)$     &    &      else $\delta(forward)$\\
+\end{tabular}
+\end{center}
+
+Los procesos quedar'ian definidos por dos nuevos elementos, un apuntador al registro $sender$ y otro a $forward$ para obtener en cada caso el resultado de la evaluaci'on de sus respectivas funciones: $<PC,PA,PV,PN,s,f>$ \\\\
+La restricci'on $(sender > 0)$ quedar'ia determinada as'i:
+
+\begin{tabular}{l l p{12cm}}
+> & ; Funci'on > \\
+0 & ; Constante 0\\
+SENDER & ; Variable $sender$ \\
+REG SENDER & ; Registro del resultado de evaluaci'on del $sender$\\
+\end{tabular}
+
+Y la restricci'on $forward < 0$ quedar'ia:
+
+\begin{tabular}{l l p{12cm}}
+< & ; Funci'on <\\
+0 & ; Constante 0\\
+FORWARD & ; Variable $forward$\\
+REG FORWARD & ; Registro del resultado de evaluaci'on de $forward$\\
+\end{tabular}
+
+Un ejemplo del c'odigo de bytes ser'ia el siguiente:
+
+\begin{tabular}{l p{12cm}}
+POP \\
+>\\
+TERMC 0\\
+TERMV 0\\
+REG SENDER\\
+POP\\
+<\\
+TERMC 0\\
+TERMV 0\\
+REG FORWARD\\
+OBJCC S F\\
+\end{tabular}
+
+Esta alternativa se descart'o porque presenta dificultad en el mantenimiento de los resultados de evaluaci'on en los registros $sender$ y $forward$ y en la determinaci'on de 'estos para cada objeto. El solo hecho de tener estos registros no garantiza realizar una comunicaci'on apropiada y utilizar el concepto de condicional para la comunicaci'on podr'ia no ser clara en cuanto a que hay dos condiciones para la comunicaci'on:
+\begin{itemize}
+\item Que al reemplazar la variable $sender$ por los respectivos par'ametros, debe satisfacer la restricci'on $\phi_{sender}$.
+\item Que exista en el proceso receptor el m'etodo requerido solicitado por el proceso emisor.
+\end{itemize}
+La primera condici'on prima sobre la segunda, en ese caso la restricci'on $\delta_{forward}$ no ser'ia una guarda o consecuencia de la condici'on inicial.
+
+\subsubsection {Tercera Alternativa}
+
+Considera la definición de funciones $sender$ y $forward$, tomando como referencia una \mbox{dirección} de retorno. En esta alternativa cada funci'on esta determinada por una \mbox{direcci'on} de referencia, la cual es necesaria para realizar su respectivo llamado. As'i como se \mbox{realiza} un llamado a los m'etodos, tambi'en se realizan llamados a las funciones $sender$ y $forward$ y cada una va a tener su correspondiente direcci'on en una tabla de funciones, de esta forma ser'an identificadas en el momento del llamado.
+
+def func1 XXX\\
+...\\
+XXX:ret\\
+def func2 YYY\\
+...\\
+YYY:ret
+
+Considerando la siguiente lista de objetos y sus respectivas funciones de evaluaci'on, como se muestra en la figura \ref{Obj1}.
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics{Obj1.eps}
+\caption{\label{Obj1} Lista de Objetos}
+\end{center}
+\end{figure}
+
+$Obji$: Objeto i\\
+$si$: Funci'on $sender$ del Objeto i\\
+$fi$: Funci'on $forward$ del Objeto i\\\\
+Y el siguiente mensaje $a \ \lhd \ m(X)$
+
+\begin{tabular}{l l p{12cm}}
+PUSHV X & ; Push par'ametros(X)\\
+PUSHM m & ; Push m'etodos\\
+PUSHV a & ; Push objeto a evaluar\\
+CALLM & ; Llamado al m'etodo\\
+CALLF & ; Llamado a funci'on\\
+\end{tabular}
+
+Para el caso de esta alternativa, cuando existe un mensaje queda dif'icil determinar que objeto puede recibirlo o con cual objeto puede comunicarse, ya que solo despu'es de evaluar la restricci'on y determinar que existe el m'etodo apropiado de comunicaci'on se puede establecer cual es ese objeto, no como en el c'alculo anterior que los objetos ya venian determinados por un identificador. Igualmente para esta alternativa, la l'ogica de la comunicaci'on estar'ia controlada desde la instrucci'on $CALLF$ y no habr'ia claridad en el proceso de selecci'on del objeto y mucho menos de la secuencia de ejecuci'on, pues esta mas del lado de la definici'on de las restriciones $\phi_{sender}$ y $\delta_{forward}$ que desde el mismo envio del mensaje; por estas razones se descart'o esta alternativa.
+
+\subsubsection {Cuarta Alternativa}
+En esta alternativa la definici'on de las funciones $sender$ y $forward$ esta contemplada dentro del cuerpo del objeto; en ese caso el objeto se determina por su etiqueta y la direcci'on del comienzo del primer m'etodo. Cuando se trata de establecer comunicaci'on con el objeto se pasa a la l'inea de evaluaci'on de las restricciones $\phi_{sender}$ y $\delta_{forward}$, de acuerdo a esto se sigue con la ejecuci'on del cuerpo del m'etodo desde la direcci'on respectiva.\\\\
+OBJCC METH(DIR)\\
+DEFS:\\
+...\\
+DEFF:\\
+...\\
+METH 1
+
+Esta alternativa proporciona una soluci'on parcial, pero finalmente no hay claridad en la evaluaci'on de las restricciones $\phi_{sender}$ y $\delta_{forward}$ y en el retorno al m'etodo apropiado para la comunicaci'on despu'es de la declaraci'on del objeto, ya que durante la ejecuci'on de la evaluaci'on de las restricciones podr'ia perderse la referencia al m'etodo.
+
+\subsubsection {Quinta Alternativa}
+\label{quintaalternativa}
+
+Como el bytecode debe soportar la caracter'istica de los objetos en el nuevo $PiCO$, que no se referencian por un nombre o una variable, sino por la evaluaci'on de una \mbox{restricci'on}; para esta alternativa se defini'o una instrucci'on que enmarca la definici'on de las restricciones $\phi_{sender}$ y $\delta_{forward}$: $FUNC$ (comienzo de la definci'on de funci'on). El bytecodes de las restricciones se define con respecto a las instruccions de predicados de primer orden.
+\\\\
+Para el ejemplo la secci'on \ref{AltDis}, la codificaci'on del lenguaje m'aquina estar'ia \mbox{definida} de la siguiente forma:
+
+\begin{tabbing}
+\=0~~~~~~~~~~~~~~~\=NEWV~~~~~\=~~~~~~~~~~~~~~~\=~~~~~~~~~~~~~~~\=;X~~~~~~~~~~~~~~~\=~~~~~\= \\
+\>1	\>NEWV   \>	\>      \>;Y\\
+\>2	\>PAR ETQ1  \>	\>      \>;En paralelo con ETQ1\\
+\>3 FUNC1:	\>FUNC RET1\>	\>      \>;Función $sender$, RET1:dir fin \\
+\>4	\>POP   \>	\>      \>;Variable $sender$ evaluar del PA\\
+\>5 	\>ATOM GREAT 2   \>	\>       \>;>\\
+\>6	\>TERMV 0   \>	\>      \>;Variable $sender$\\
+\>7	\>TERMC 0   \>	\>      \>;Constante 0\\
+\>8	\>ASKF   \>	\>      \>;Ask al \emph{Store}\\
+\>9	\>PUSHV 0\>	\>      \>;Variable 0\\
+\>10	\>CALL\>	\>      \>;Llamada\\
+\>11 	\>POP \>	\>      \>;Sacar el m'etodo\\
+\>12	\>COMM\>	\>      \>;Establecer Comunicaci'on\\
+\>13	\>PUSHM 0\>	\>      \>;Recuperar el m'etodo\\
+\>14	\>REE\>	        \>      \>;Reenvío\\
+\>15 RET1:	\>FUNC RET2\>	\>      \>;Función $forward$, RET2:dir fin \\
+\>16	\>NEWV      \>	\>      \>;Variable $forward$ a imponer la restricci'on\\
+\>17 	\>ATOM EQ 2\>	\>      \>;=\\
+\>18 	\>TERMV 0   \>	\>      \>;Variable $forward$\\
+\>19	\>TERMC 0   \>	\>      \>;Constante 0\\
+\>20	\>TELL   \>	\>      \>;Tell al \emph{Store}\\
+\>21	\>PUSHV 0   \>	\>      \>;Variable 0\\
+\>22	\>CALL\>	\>      \>;Llamada\\
+\>23 RET2:	\>COBJCC FUN1 FUN2 1\>   \>  \>;Definici'on de Objeto clonado, FUN1:R. $sender$,\\
+\>	\>    \>   \>  \>;FUN2:R. $forward$, 1: Nro de m'etodos\\
+\>24	\>METH 1 25    \>   \>  \>;M'etodo Sqr\\
+\>26	\>POP         \> \>     \>;n\\
+\>27	\>POP         \> \>     \>;r\\
+\>28	\>ATOM EQ 2 \>	\>      \>;=\\
+\>29	\>TERMV 0\>	\>      \>;r\\
+\>30	\>TERMF MULT 2 \>	\>      \>;*\\
+\>31	\>TERMV 1 \>	\>      \>;n\\
+\>32	\>TERMV 1 \>	\>      \>;n\\
+\>33	\>TELL\\
+\>34	\>RET\\
+\>35 ETQ1:	\>PAR ETQ2  \>	\>      \>;En paralelo con ETQ1\\
+\>36	\>PUSHV 1  \> \>     \>;X\\
+\>37	\>PUSHV 0  \> \>     \>;Y\\
+\>38	\>PUSHM 1 \> \>      \>;M'etodo 1, Sqr\\
+\>39	\>PUSHV 1 \> \>      \>;X\\
+\>40	\>CALL \> \>       \>;Llamada\\
+\>41	\>RET\\
+\>42 ETQ2:	\>ATOM EQ 2  \> \>     \>;=\\
+\>43	\>TERMV 1  \> \>     \>;X\\
+\>44	\>TERMC 3  \> \>     \>;Constante 3\\
+\>45	\>TELL\\
+\end{tabbing}
+
+Cada objeto debe tener inicialmente la definici'on de las funciones $sender$ y $forward$ a trav'es de los predicados de primer orden. Primero se debe definir la funci'on $sender$, \mbox{determinando} la direcci'on de terminaci'on de la misma (comienzo de la funci'on $forward$), luego la funci'on $forward$; por 'ultimo la clase del objeto y sus respectivos m'etodos.\\\\
+En la anterior codificaci'on, la definici'on de la restricci'on $(sender > 0 )$ esta dada desde el n'umero de l'inea 3 a la l'inea 7 y la restricci'on $(forward \leq 0)$ desde la l'inea 17 a la l'inea 21. El c'odigo intermedio entre estos rangos de l'ineas definen la comunicaci'on o reenvío de mensajes.\\
+\\
+La evaluaci'on de la restricci'on $\phi_{sender}$ se realiza a trav'es de la instrucci'on $ASKF$ (l'inea 8), dependiendo del resultado de esta evaluaci'on se establece la comunicaci'on o verificaci'on del resto de objetos que puedan atender el llamado. De ser verdadera se procede a establecer la comunicaci'on ($COMM$) y se verifica si el m'etodo del llamado se encuentra dentro de la colecci'on de m'etodos del objeto, de ser as'i se ejecuta el cuerpo del m'etodo, si no, se realiza el reenvío ($REE$) y se ejecuta la definici'on de la funci'on $forward$; dando paso a la creaci'on de una nueva variable, a la imposici'on de la condici'on de reenvío, y al almacenamiento de esta variable por medio de la instrucci'on TELL (l'inea 20).\\\\
+Una vez se realiza esta evaluaci'on, el comportamiento de la m'aquina es igual al de la m'aquina anterior, conservando la mayor'ia de instrucciones, con algunas variaciones en la implementaci'on.\\\\
+Esta fue la alternativa escogida porque presenta una soluci'on completa que considera tanto la definici'on de las restricciones $\phi_{sender}$ y $\delta_{forward}$, como su evaluaci'on, comunicaci'on y reenvío de procesos.
+
+\subsection{Características del Diseño Actual}
+
+En \emph{MAPiCO}, se definieron las estructuras de soporte, el formato de instrucciones, la codificaci'on y el comportamiento interno, siguiendo la especificaci'on y las reglas de \mbox{reducci'on} del c'alculo $PiCO$.\\\\
+Un primer elemento a exponer es la arquitectura de la máquina actual, muy similar a la arquitectura de la m'aquina anterior. Para ello, se describen las áreas constituyentes de la arquitectura que estan representadas en las estructuras usadas en tiempo de ejecución. El diagrama de bloques de la m'aquina se muestra en la figura \ref{Diag_B}.
+
+\begin{figure*}[!h]
+\begin{center}
+\includegraphics[angle=0,width=11cm]{Diag_B.eps}
+\caption{\label{Diag_B}Diagrama de Bloques de \emph{MAPiCO}}
+\end{center}
+\end{figure*}
+
+\subsubsection{Memor'ia Est'atica y Din'amica}
+
+La m'aquina esta compuesta por dos 'areas de memor'ia: Memor'ia de Programa y \mbox{Memor'ia} de Traducci'on.\\\\
+ \textbf{La memoría de programa} hace referencia a la memoría estática que almacena los programas a ser ejecutados.\\
+ \textbf{La memoría de traducción o memoría dinámica}, es en donde se almacena las traducciones de ligaduras de variables al \emph{store}, parámetros para el llamado de métodos y es en donde se crea el árbol sintáctico que describe las restricciones.
+
+\subsubsection{Colas}
+
+La m'aquina cuenta con cuatro colas para los diferentes estados de ejecuci'on de un proceso:
+\begin{itemize}
+\item RunQ: Cola de Ejecuci'on {\bf Rq}.
+\item ObjQ: Cola de Objetos suspendidos {\bf Oq}.
+\item MsgQ: Cola de Mensajes suspendidos {\bf Msq}.
+\item AskQ: Cola de Ask suspendidos {\bf Aq}.
+\end{itemize}
+
+\subsubsection{Registros Internos}
+
+Al igual que en la definición anterior, la m'aquina tiene un control donde se guardan los registros internos, que son de uso específico para guardar la información de la memoría y de los procesos y a través de éstos la máquina modifica la información para actualizar procesos y colas; estos registros son:
+\begin{itemize}
+\item Puntero a Código Actual \textbf{PCA}: Apunta a la instrucción que esta siendo ejecutada.
+\item Puntero a Variables Actual \textbf{PVA}: Apunta al $PV$ del proceso en ejecución. (ver sección \ref{Capproc}). 
+\item Puntero a Argumentos de Funciones \textbf{PAA}: Apunta al $PA$ del proceso que esta siendo ejecutado.
+\item Puntero a M'etodos Actual \textbf{PMA}: Apunta al $PM$ del proceso en ejecución.
+\item Puntero a Objetos Actual \textbf{POA}: Apunta al $PO$ del proceso actual o en ejecución.
+\item Puntero Auxiliar \textbf{PAUX}: Usado para almacenar información temporal de tipo argumentos.
+\item Puntero Temporal \textbf{PTEMP}: Puntero adicional de uso gen'erico para necesidades futuras.
+\end{itemize}
+
+\subsubsection{Procesos} \label{Capproc}
+
+Un proceso en \emph{MAPiCO}, tal como se definió en el diseño inicial de la máquina, es 'el conjunto de información requerida para la ejecución de procesos en \emph{PiCO}' \cite{buss.heredia:mapico}. La estructura de procesos en la \emph{MAPiCO} actual cuenta con los siguientes elementos:
+
+\begin{itemize}
+\item Puntero a C'odigo \textbf{PC}: Registro que apunta al pr'oximo c'odigo de instrucci'on a ser ejecutado, en la memor'ia del programa.
+\item Puntero a Variables \textbf{PV}: Registro que apunta al primer elemento de la pila de variables en la memor'ia de traducci'on, al igual que en la definici'on anterior se modifica con las instrucciones $NEWV$ o $POP$, adicionando variables y obteniendo las mismas (Ver secci'on \ref{InstMApiCO}).
+\item Puntero a Argumentos de Funciones \textbf{PA}: Registro que apunta a una lista con los argumentos y el objeto receptor. Para ser manipulado se utilizan las instrucciones $PUSHV$ y $PUSHM$ (Ver secci'on \ref{InstMApiCO}).
+\item Puntero a M'etodos \textbf{PM}: Registro que apunta al primer elemento de la pila de m'etodos, en la memor'ia de traducci'on. La pila de m'etodos puede ser manipulada a trav'es de las instrucciones $PUSHM$ {para adicionar referencias de m'etodos} y $POP$ (para obtener el m'etodo actual).Ver secci'on \ref{InstMApiCO}.
+\item Puntero a Objetos \textbf{PO}: Apunta al pimer elemento de la lista de objetos evaluados en la comunicaci'on actual; Esta lista es manipulada a trav'es de las instrucciones $COMM$ y $REE$ (Ver secci'on \ref{InstMApiCO}).
+\item Puntero Auxiliar \textbf{PAUX}: Apunta a estructuras auxiliares para  manipulaci'on de procesos.
+\item Puntero Temporal \textbf{PTEMP}: Puntero adicional de uso gen'erico para necesidades futuras.
+\end{itemize}
+ 
+En el diseño actual se descart'o el siguiente elemento planteado en la m'aquina anterior:\\
+\textbf{\emph{Puntero a Nombres PN}}, por no considerar necesario referenciar o manipular nombres dentro de la definici'on actual del c'alculo \emph{PiCO}.
+
+\subsubsection{Interacci'on con el Sistema de Restricciones}
+La m'aquina interactúa constantemente con el sistema de restricciones \emph{store} $S$. 'Este 'ultimo provee el almacenamiento de restricciones y las operaciones $ASK$ y $TELL$ (Ver secci'on \ref{InstMApiCO}).
+
+\subsection{Estados de la M'aquina Actual}
+
+El diseño de la m'aquina actual considera la definici'on y denotaci'on formal de estados de la m'aquina anterior, con el fin de establecer similitudes y diferencias entre ambas m'aquinas.\\\\
+El estado de \emph{MAPiCO} esta representado por:
+\begin{itemize}
+\item \textbf{Un Proceso en ejecuci'on} compuesto por:\\
+$Hilo$: Hilo del proceso.\\\\
+$HBind$ 'o $B$: Es el conjunto de variables ligadas que se referencian en el \emph{Store}, estas son de la forma $ I_{1}\mapsto L_{1},...,I_{n}\mapsto L_{n}$ , $L \in Storef$ (conjunto de variables que ocurren dentro del \emph{Store})\\\\
+$HAux$ 'o $H$: Es el conjunto de variables y restricciones ligadas en t'erminos de $L$. $HAux ::= HBind\ | \ \phi( \widetilde{L})$.\\\\
+Cuando no haya ligaduras en $HBind$ y $HAux$ se denotar'a como: $\oslash$.\\
+
+\item \textbf{Colas para los diferentes estados de la m'aquina}: 
+
+      $ObjQ$: Estructura de ligaduras ($HBind$), par'ametros ($HAux$)  y procesos objeto ($ObjQ:=(\phi_{sender},\delta_{forward}) \ \triangleright M \ | \ clone (\phi_{sender},\delta_{forward}) \ \triangleright M$).\\\\
+      $MsgQ$: Estructura de Ligaduras ($HBind$), p'arametros ($HAux$) y procesos tipo mensaje ($MsgQ:= X \lhd  Sqr(X,Y) \ | \  clone(X \lhd Sqr(X,Y))$).\\\\
+      $AskQ$: Estructura de Ligaduras ($HBind$), restricciones ($HAux$) y procesos ask ($AskQ:= ask \ \phi \ then\ P$)\\\\
+      $RunQ$: Estructura de Ligaduras ($HBind$), restricciones ($HAux$) e hilos de ejecuci'on ($Hilo$).\\\\
+      La denotaci'on de las colas esta dada por:\\
+      $Cola(X)::= X :: ... ::X|\bullet$\\\\
+      En donde:\\
+      ``::'' Representa la concatenaci'on de dos colas o de un elemento y una cola seg'un el caso.\\
+      ``$\bullet$'' Denotaci'on para colas vacias.\\
+\item \textbf{Store 'o S}: Conjunto de conjunciones de restricciones en t'erminos de $L: Store =  {\phi_{1}(\widetilde{L}) \wedge ...\wedge\phi_{m}(\widetilde{L})}$. Un \emph{store} vacio se denotar'a por ``$\bullet$''.
+\end{itemize}
+
+Seg'un lo anterior, un estado estar'ia representado por:
+
+\begin{center}
+${\confmaq {Hilo}{HBind}{HAux}{ObjQ}{MsgQ}{AskQ}{RunQ}{Store}}$
+\end{center}
+ 'o en forma resumida 
+\begin{center}
+$ {\confmaq {\vec{P}}{B}{H}{Oq}{Mq}{Aq}{Rq}{S}}$
+\end{center}
+
+\textbf{El estado inicial de la m'aquina} es el estado computacional con el cual la m'aquina comienza su ejecuci'on, en este caso la cola de objetos, mensajes y ask estan vac'ias. Este estado incial estar'a representado por:
+\begin{center}
+$ {\confmaq {\vec{P}}{\oslash}{\oslash}{\bullet}{\bullet}{\bullet}{\bullet}{\oslash}}$
+\end{center}
+
+\textbf{El estado final de la m'aquina} es el estado en el cual no hay nada mas que \mbox{planificar} en la cola de ejecuci'on y la m'aquina sabe que los procesos $Aq$, $Mq$ y $Oq$ estan suspendidos y no pueden ser reducidos. El estado final estar'a representado por:
+\begin{center}
+${\confmaq {nil}{B}{H}{Oq}{Mq}{Aq}{\bullet}{S}}$
+\end{center}
+
+\subsection{Diagrama de Transiciones de la M'aquina Actual}
+
+El diagrama de transiciones de la m'aquina se presenta en la siguiente figura \ref{Diag_Bloq}:
+
+\begin{figure}[hbt]
+\begin{center}
+\includegraphics{Diag_Bloq.eps}
+\caption{\label{Diag_Bloq}Diagrama de Transiciones entre Estados de \emph{MAPiCO}}
+\end{center}
+\end{figure}
+
+Donde:
+\begin{enumerate}
+\item Cuando hay procesos emisores (Mensajes), receptores (Objetos) y ask que no cumplen con las reglas de comunicaci'on, reenvío y ask con respecto al \emph{Store}; 'estos procesos pasan al estado de suspendidos.
+\item Cuando ocurre un $tell$, todos los mensajes y los ask se pasan al estado de listos en la cola de ejecuci'on para resolverse
+\item Los procesos objeto pasan a listos cuando hay un mensaje con el que puedan ser comunicados; a diferencia  de los otros tipos de proceso, los objetos no pasan a listos en un solo paso.
+\item Ejecuci'on de procesos en estado de listos.
+\item Finalizaci'on de ejecuci'on de procesos.
+\end{enumerate}
+
+
+\subsection{Reglas de Reducci'on de la M'aquina}
+
+Las reglas de reducci'on se definieron con base en la sem'antica operacional del C'alculo \emph{PiCO} y en la especificaci'on de la m'aquina anterior con respecto a la reducci'on de procesos a trav'es de configuraciones o estados.
+
+Los procesos se reducen transformando una configuraci'on inicial en una final, evaluando y aplicando cada proceso conformado por el hilo de ejecuci'on y el ambiente actual.\\\\
+El estado de la m'aquina esta representado por:
+\begin{center} 
+$ {\confmaq {Hilo}{HBind}{HAux}{ObjQ}{MsgQ}{AskQ}{RunQ}{Store}}$
+\end{center} 
+
+\subsubsection{Definici'on de Reglas de Reducci'on}
+Las reglas son de la forma:
+\begin{center} 
+{$ \reduce {\confmaq {\vec{P}}{B}{H}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq { \vec{P^\prime}}{B^\prime}{H^\prime}{Oq^\prime} {Msq^\prime} {Aq^\prime}{Rq^\prime}{S^\prime}}$}
+\end{center} 
+
+En donde:
+\begin{itemize}
+\item $Hilo,\ HBind \ y \ HAux$: Representan el ambiente en ejecuci'on.
+\item $B$ o $HBind$: Es el conjunto de variables ligadas que se referencian en el \emph{Store}.
+\item $H$ o $HAux$: Es el conjunto de variables y restricciones ligadas.
+\item $S$: Es el \emph{Store}, conjunto de conjunciones de restricciones.
+\item $ObjQ \ (Oq)$: Estructura de Ligaduras, par'ametros y procesos objeto.
+\item $MsgQ \ (Msq)$: Estructura de Ligaduras, p'arametros y procesos tipo mensaje.
+\item $AskQ \ (Aq)$: Estructura de Ligaduras, restricciones y procesos ask.
+\item $RunQ \ (Rq)$: Estructura de Ligaduras, p'arametros, restricciones e hilos de ejecuci'on.
+\end{itemize}
+
+Las reglas son las siguientes:\\\\
+El proceso $SCHED$ remueve el poceso actual en ejecuci'on, permitiendo que el siguiente proceso en la cola de ejecuci'on sea considerado para reducir:
+
+\begin{center} 
+$SCHED$:{$ \reduce {\confmaq {nill}{B}{H}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq { \vec{P}^\prime}{B^\prime}{H^\prime}{Oq^\prime} {Msq^\prime} {Aq^\prime}{Rq^\prime}{S^\prime}}$}
+\end{center} 
+
+El proceso $local \ x \ in \ P$ o $Local \ a \ in \ P$ crea un nuevo enlace de $x$  a $L$ donde $L$ es realmente una variable o nombre.
+
+\begin{center} 
+$NEW-REF$:{$\judge{L \ Nueva}
+{\reduce {\confmaq {Local \ x \ in \ P}{B}{H}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq { P}{B+(x \rightarrow L)}{H}{Oq} {Msq} {Aq}{Rq}{S}}}$}
+\end{center} 
+
+En el caso de una composici'on paralela $(P|Q)$, se deja el proceso $Q$ al final de la cola de ejecuci'on siguiendo con la ejecuci'on del proceso $P$:
+
+\begin{center} 
+$PARALLEL$:{$\judge{}
+{\reduce {\confmaq {(P|Q)}{B}{H}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq {P}{B}{H}{Oq} {MsgQ} {Aq}{Rq::(B,H,Q)}{S}}}$}
+\end{center} 
+
+Para reducir un proceso $tell \ \phi \ then \  \vec{P}$, la restricci'on $\phi(\vec{L})$ es puesta en el \emph{Store}, los procesos suspendidos de las colas $Aq$ y $Msq$ pasan a la cola de ejecuci'on $Rq$ para intentar ser reducidos nuevamente y el hilo $\vec{P}$ continua en ejecuci'on:
+
+\begin{center} 
+$TELL$:{$\judge{\forall L_{i} \in  \widetilde{L} \ L_{i} \in  Dom(B)}
+{\reduce {\confmaq {tell \ \phi \ in \ \vec{P}}{B}{\phi(\widetilde{L})}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq {\vec{P}}{B}{\oslash}{Oq}{\bullet}{\bullet}{Rq::Msq::Aq}{S \wedge \phi(\widetilde{L})}}}$}
+\end{center} 
+En donde $Dom(B)$ es el dominio del conjunto de ligaduras de variables a referenciar dentro del \emph{store}.\\\\
+Para reducir un proceso $ask \ \phi \ then \ \vec{P}$, se necesita del Sistema de Restricciones, hay tres posibles casos:\\
+1. Si del \emph{Store} se deduce $\phi(\widetilde{L})$ entonces la m'aquina continua con la ejecuci'on del hilo $\vec{P}$
+
+\begin{center} 
+$ASK_1$:{$\judge{S \models \Delta {\phi}(\widetilde{L})\quad \quad  \forall L_{i}\in \widetilde{L} \ \ L_{i} \in Dom(B)}
+{\reduce {\confmaq {ask \ \phi \ then \ \vec{P}}{B}{\phi(\widetilde{L})}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq {\vec{P}}{B}{\oslash}{Oq}{Msq}{Aq}{Rq}{S}}}$}
+\end{center} 
+
+2. Si del \emph{Store} se deduce $\neg \phi(\widetilde{L})$ entonces la m'aquina elimina la continuaci'on del proceso actual
+
+\begin{center} 
+$ASK_2$:{$\judge{S \models \Delta \neg \phi(\widetilde{L})\quad \quad  \forall L_{i}\in \widetilde{L} \ \ L_{i} \in Dom(B)}
+{\reduce {\confmaq {ask \ \phi \ then \ \vec{P}}{B}{\phi(\widetilde{L})}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq {nil}{B}{\phi(\widetilde L)}{Oq}{Msq}{Aq}{Rq}{S}}}$}
+\end{center} 
+
+3. Si del \emph{Store} no se puede deducir  $\phi(\widetilde{L})$ 'o  $\neg \phi(\widetilde{L})$, entonces el proceso es suspendido pas'andolo a la cola de $Aq$:
+
+\begin{center} 
+$ASK_3$:{$\judge{S \not \models \Delta \phi(\widetilde{L})\quad \quad S \not \models \Delta \neg \phi(\widetilde{L})\quad \quad  \forall L_{i}\in \widetilde{L} \ \ L_{i} \in Dom(B)}
+{\reduce {\confmaq {ask \ \phi \ then \ \vec{P}}{B}{\phi(\widetilde{L})}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq {nil}{B}{\phi(\widetilde{L})}{Oq}{Msq}{Aq::(B,\phi(\widetilde{L}),ask \ \phi \ then \ \vec{P})}{Rq}{S}}}$}
+\end{center} 
+
+Si se intenta reducir una comunicaci'on de un objeto que no se encuentra en la cola de Objetos $Oq$, este mensaje se suspende en la cola de Mensajes $Msq$. Objetos y mensajes replicados son llevados a las colas $Oq$ y $Msq$ respectivamente.
+
+\begin{center} 
+$MsgEnq$:{$\judge{ S \models \Delta I^\prime \quad \quad S \not \models \Delta {\phi} [I^\prime / sender ]\quad \quad (\phi_{sender},\delta_{forward}) \triangleright M \not \in Oq \quad \quad (\widetilde{K}\rightarrow \widetilde{L}) \in B}
+{\reduce {\confmaq {I^\prime \triangleleft l_{i}: [\widetilde{K}] \ then \ \vec{P}}{B}{\widetilde{x_{i}} \rightarrow \widetilde{L}}{Oq}{Msq}{Aq}{Rq}{S}} {\confmaq {nil}{B}{\widetilde{x_{i}} \rightarrow \widetilde{L}}{Oq}{{Msq :: ( B,\widetilde{x_{i}} \rightarrow \widetilde{L}, I^\prime \triangleleft l_{i}: [ \widetilde{K} ] \ then \ \vec{P} ) }}{Aq}{Rq}{S}}}$}
+\end{center} 
+
+Si el proceso es un mensaje $I^\prime \triangleleft l_{i}: [\widetilde {K}] \ then \ \vec{P}$ a un objeto que se encuentra en la cola $Oq$ y la etiqueta del mensaje $l_{i}$ coincide con una etiqueta en el conjunto de m'etodos del objeto, el objeto es eliminado de la $Oq$ y el cuerpo del m'etodo $\vec{P}_{i}$ con el nuevo enlace para $\widetilde{K}$ es puesto al final de la cola de ejecuci'on $Rq$ para ser ejecutado luego; la ejecuci'on continua con $\vec{P}$
+
+\begin{center} 
+$MsgComm$
+\begin{math}
+\judge{S \models \Delta I^\prime \quad \quad S \models \Delta {\phi} [I^\prime / sender ] \quad\quad |\widetilde{K}| = |\widetilde{x}|}{
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+ {I^\prime \triangleleft l_{i}: [\widetilde{K}] \ then \ \vec{Q}},{B},{\widetilde{x_{i}} \rightarrow \widetilde{L}},\\
+\scriptstyle
+{Oq::(B^\prime,\oslash,(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}])},\\
+\scriptstyle
+{Msq},{Aq},{Rq},{S}\\
+\end{array}
+\right \rangle
+\redpi
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+\vec{Q},B,\oslash,Oq,Msq,Aq,\\
+\scriptstyle
+Rq::(B^\prime + ( \widetilde{x_{i}} \rightarrow \widetilde{L}),\oslash,\vec{P_{i}}\{ \widetilde{K_{i}}/ \widetilde{x_{i}}, I^\prime / sender \}),S
+\end{array}
+\right \rangle
+}
+\end{math}
+\end{center} 
+
+Si el objeto $(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}})]$ existe en la cola$ Oq$ pero no hay una etiqueta $l_{i}$ para comunicarse con $I^\prime \triangleleft l_{i}: [\widetilde {K}] \ then \ \vec{Q}$ y el objeto tiene una restricci'on de reenvío $\delta_{forward}$, se crea una nueva variable $J$ y se le impone la restricci'on $\delta_{forward} \ (local\ J\ in\ tell \ \delta[J/forward])$ y se deja en la cola $Oq$ el proceso $(J\triangleleft l_{i}: [\widetilde{K}] \ then \ Q )\ |\ (\phi_{sender},\delta_{forward}) \triangleright M)$
+
+Inicialmente se quita el proceso actual y se envia a ejecuci'on el proceso: \\
+$(local\ J\ in\ (tell \ \delta[J/forward])\ then\ (J\triangleleft l_{i}: [\widetilde{K}] \ then \ Q ))$:
+
+\begin{center} 
+$MsgRee$:
+\begin{math}
+\judge{S \models\Delta {\phi} [I^\prime / Sender ] \quad\quad S \sqcup \delta[I^\prime/forward]\models \Delta \bot \quad \quad l \not \in Labels (M)}
+{
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{I^\prime \triangleleft l_{i}: [\widetilde{K}] \ then \ \vec{Q}},{B},{\widetilde{x_{i}} \rightarrow \widetilde{L}},\\
+\scriptstyle
+{Oq::(B^\prime,\oslash,(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}])},\\
+\scriptstyle
+{Msq},{Aq},{Rq},{S}
+\end{array}
+\right \rangle
+\redpi
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{nil},{B},{\widetilde{x_{i}} \rightarrow \widetilde{L}},\\
+\scriptstyle
+{Oq::(B^\prime,\oslash,(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}])},\\
+\scriptstyle
+{Msq},{Aq},Rq::( B,( \widetilde{x_{i}} \rightarrow \widetilde{L}),( local \ J\ in\ (tell \ \delta[J/forward]),\\
+\scriptstyle
+then\ (J\triangleleft l_{i}: [\widetilde {K}] \ then \ Q ))),S
+\end{array}
+\right \rangle
+}
+\end{math}
+\end{center} 
+
+Posteriormente la ejecuci'on de este tipo de Proceso quedar'ia de la siguiente forma:
+
+\begin{center} 
+$MsgRee$:
+\begin{math}
+\judge {S \models\Delta {\phi} [I^\prime / Sender ] \quad\quad S \sqcup \delta[I^\prime/forward]\models \Delta \bot \quad \quad l \not \in Labels (M)}
+{
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{I^\prime \triangleleft l_{i}: [\widetilde{K}] \ then \ \vec{Q}},{B},{\widetilde{x_{i}} \rightarrow \widetilde{L}},\\
+\scriptstyle
+{Oq::(B^\prime,\oslash,(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}])},\\
+\scriptstyle
+{Msq},{Aq},{Rq},{S}
+\end{array}
+\right \rangle
+\redpi
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{nil},{B},{(\widetilde{x_{i}} \rightarrow \widetilde{L})},\\
+\scriptstyle
+{Oq::(B^\prime,\oslash,(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}])},\\
+\scriptstyle 
+{\bullet},{\bullet},{Rq::Msq::Aq::(B,(\widetilde{x_{i}} \rightarrow \widetilde{L})+(J \rightarrow \widetilde{L}),(J\triangleleft l_{i}: [\widetilde{K}] \ then \ Q))},\\
+\scriptstyle
+{S\wedge \delta [J/forward]}
+\end{array}
+\right \rangle
+}
+\end{math}
+\end{center} 
+
+En la siguiente regla no hay ning'un mensaje en la cola $Msq$ para comunicarse con $(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}})]$, por tanto el objeto es pasado al final de la cola de objetos $Oq$ para su posterior reducci'on:
+
+\begin{center} 
+$ObjEnq$:
+\begin{math}
+\judge {S \models \Delta I^\prime \quad \quad S \not \models \Delta {\phi} [I^\prime / sender ]\quad \quad I^\prime \triangleleft m \ then \ \vec{P}\not \in Msq}
+{
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}]},\\
+\scriptstyle
+{B},{\oslash},{Oq},{Msq},{Aq},{Rq},{S} 
+\end{array}
+\right \rangle
+\redpi
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{nil},{B},{\oslash},{Oq::(B,\oslash,(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}])},\\
+\scriptstyle
+{Msq},{Aq},{Rq},{S}
+\end{array}
+\right \rangle
+}
+\end{math}
+\end{center} 
+
+Cuando existe un mensaje $I^\prime \triangleleft l_{i}: [\widetilde {K}] \ then \ \vec{P}$ en la cola de mensajes $Msq$ para comunicarse con el objeto $(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}})]$ y adicionalmente hay una etiqueta $l_{i}$ en la lista de m'etodos del objeto; el mensaje es eliminado de la cola $Msq$ (si no es replicado),la continuaci'on del mensaje $\vec{P}$ es colocado al final de la cola de ejecuci'on $Rq$, seguido por el cuerpo del m'etodo $\vec{P_{i}}$ con el nuevo enlace para $\widetilde{k}$ 
+
+\begin{center} 
+$ObjComm$:
+\begin{math}
+\judge {S \models \Delta I^\prime \quad \quad S \models \Delta {\phi} [I^\prime / sender ] \quad\quad  |\widetilde{K}| = |\widetilde{x}|}
+{
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}]},{B},{\oslash},{Oq},\\
+\scriptstyle
+{Msq::(B^\prime,(\widetilde{x_{i}} \rightarrow \widetilde{L}),I^\prime \triangleleft l_{i}: [\widetilde{K}] \ then \ \vec{P})},{Aq},{Rq},{S}
+\end{array}
+\right \rangle
+\redpi
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{nil},{B},{\oslash},{Oq},{Msq},{Aq},\\
+\scriptstyle
+{Rq::(B+(\widetilde{x_{i}} \rightarrow \widetilde{L}),\oslash,\vec{P_{i}}\{ \widetilde{K_{i}}/ \widetilde{x_{i}}, I^\prime / sender\})},{S}
+\end{array}
+\right \rangle
+}
+\end{math}
+\end{center}  
+
+Si existe un mensaje $I^\prime \triangleleft l_{i}: [\widetilde{K}] \ then \ \vec{P}$ en la cola $Msq$ para intentar comunicarse con el  objeto $(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}})]$ con una restricci'on de reenvío $\delta_{forward}$, pero no hay una etiqueta $l_{i}$ en la lista de m'etodos del objeto; el mensaje es pasado de la cola de mensajes $Msq$ al final de la cola de ejecuci'on $Rq$, pero creando una nueva variable $J$, imponiendole la restricci'on $\delta_{forward}$, cambiando el proceso por  $(J\triangleleft l_{i}: [\widetilde{K}] \ then \ Q )\ |\ (\phi_{sender},\delta_{forward}) \triangleright M)$ y pasando el objeto a la cola $Oq$:
+
+\begin{center} 
+$ObjRee$:
+\begin{math}
+\judge {S \models\Delta {\phi} [I^\prime / _{Sender} ] \quad\quad S \sqcup \delta[I^\prime/forward]\models \Delta \bot \quad \quad l \not \in Labels (M)}
+{
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+ {(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}]},
+{B},{\oslash},{Oq},\\
+\scriptstyle
+{Msq::(B^\prime,\oslash,(\widetilde{x_{i}} \rightarrow \widetilde{L}),I^\prime \triangleleft l_{i}: [\widetilde{K}] \ then \ \vec{P})},{Aq},{Rq},{S}
+\end{array}
+\right \rangle
+\redpi
+\left \langle
+\begin{array}{lrr}
+\scriptstyle
+{nil},{B},{\oslash},\\
+\scriptstyle
+{Oq::(B,\oslash,(\phi_{sender},\delta_{forward}) \triangleright [l_1:(\widetilde{x_1})\vec{P_1},...,l_{m}:(\widetilde{x_{m}})\vec{P_{m}}])},{Msq},\\
+\scriptstyle
+{Aq},{Rq::(B^\prime,(\widetilde{x_{i}} \rightarrow \widetilde{L})+(J\rightarrow \widetilde{L}),J\triangleleft l_{i}: [\widetilde{K}]\ then \ \vec{Q})},{S\wedge \delta [J/forward]}
+\end{array}
+\right \rangle
+}
+\end{math}
+\end{center} 
+
+\subsection{Conjunto de Instrucciones de MAPiCO} \label{InstMApiCO}
+
+Con respecto al conjunto de instrucciones de la nueva versi'on de \emph{MAPiCO}, se mantienen la BNF para la especificaci'on de predicados de primer orden (Tabla \ref{BnfEspPredAnt}) y las \mbox{instrucciones} para construir estos predicados (Tabla \ref{InstPredAnt}); pero se contemplan cambios en las \mbox{instrucciones} para la manipulaci'on de procesos y para la definici'on de objetos de la m'aquina (ver Tabla \ref{ConInstMapAct} y Tabla \ref{InstDefObjAct}).
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{||l|l|l|p{8cm}||}\hline
+\textbf{Instrucci'on} & \textbf{Opcode} & \textbf{Src1} &  \textbf{Descripci'on} \\ \hline 
+INIT & 1 &  & inicializa procesos \\ \hline 
+RET & 12 &  & Es el proceso NIL en el c'alculo \\ \hline 
+PAR & 14 & dir & Crea un nuevo porceso apuntado por Src1 para ser ejecutado en paralelo \\ \hline 
+NEWV & 13 &  & Definici'on de una nueva variable. \\ \hline 
+PUSHV & 8 & ind & Pone variables en el PA para ser pasadas como argumentos en comunicaci'on de objetos. \\ \hline
+PUSHM & 9 & ind & Pone m'etodos en el PA para ser pasados como argumentos en comunicaci'on de objetos. \\ \hline 
+POP & 7  &  & Saca el primer elemento de la pila apuntada por PA para que pase a ser una variable o nombre seg'un el caso. \\ \hline 
+ASK & 24 & num & Realiza la operaci'on ask al \emph{Store} de una restricci'on apuntada por PA \\ \hline 
+TELL & 23 &  & Adiciona al \emph{Store} la restricci'on apuntada por PA. \\ \hline 
+CALL & 17 &  & Llamado de funciones y par'ametros \\ \hline 
+ASKF & 25 &  & Realiza la operaci'on de $Ask$ para restricciones $\phi_{sender}$ y $\delta_{forward}$.\\ \hline 
+FINISH & 15 &  & Finaliza o realiza un brake en la ejecuci'on de la Máquina Abstracta. \\ \hline
+\end{tabular}
+\caption{Instrucciones para la Manipulaci'on de Procesos en la M'aquina - Versi'on Actual \label{ConInstMapAct}}
+\end{center}
+\end{table}
+
+Se puede observar en la Tabla \ref{ConInstMapAct} que se adicionaron instrucciones como $PUSHM$, $ASKF$ y $FINISH$. La instrucci'on $PUSHM$ se adicion'o para pasar la referencia del m'etodo, $ASKF$ para evaluar las restricciones $\phi_{sender}$ y $\delta_{forward}$ a trav'es del sistema de restricciones y $FINISH$ para Finalizar o realizar un brake en la ejecuci'on de la Máquina Abstracta.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{||l|l|l|l|l|p{5.5cm}||}\hline
+\textbf{Instrucci'on} & \textbf{Opcode} & \textbf{Src1} &  \textbf{Src2} &  \textbf{Src3} & \textbf{Descripci'on} \\ \hline 
+OBJCC & 10 & ind  & ind & num & Objeto definido por medio de restricciones $\phi_{sender}$ y $\delta_{forward}$, estas funciones estan determinados por indices de funci'on  Src1 y Src2 y n'umero de m'etodos igual a num \\ \hline 
+COBJCC & 11 & ind & ind & num & Objeto objcc pero clonado \\ \hline 
+METH & 6 & num & dir & & Especifica que el m'etodo Scr1 esta en la direcci'on Src2 \\ \hline 
+COMM & 19 &  &  & & Establece la comunicaci'on entre los objetos  \\ \hline 
+REE  & 18 &  &  & & Establece el reenvío entre \mbox{objetos}. \\ \hline 
+FUNC & 16 & dir &   & & Definici'on de Funciones $sender$ y $forward$, sr1 es la direcci'on fin de la funci'on\\ \hline
+\end{tabular}
+\caption{Instrucciones para la Definici'on de Objetos de la M'aquina - Versi'on Actual \label{InstDefObjAct}}
+\end{center}
+\end{table}
+
+En el caso de las instrucciones para la definici'on de objetos de la m'aquina (Tabla \ref{InstDefObjAct}), se cuenta con las instrucciones $OBJCC$ y $COBJCC$ para la definición de objetos por restricciones y no por las combinaciones de nombres y variables como en el diseño de la máquina anterior (Tabla \ref{InstObjAnt}); $COMM$ y $REE$ para establecer la comunicación y el reenvío entre objetos y $FUNC$ para enmarcar la definición de las funciones $sender$ y $forward$.
+
+\newpage
+\section{An'alisis de Cambios entre la Versi'on Anterior y la Versi'on Actual de MAPiCO}
+
+A continuaci'on se plantearan algunas diferencias entre la Versi'on Anterior de \emph{MAPiCO} y la Versi'on Actual de acuerdo a las modificaciones realizadas al c'alculo \emph{PiCO}, al diseño y a la implementaci'on de la M'aquina Abstracta. Los detalles se presentan en la Tabla \ref{difimplreimp}:
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{|p{3.5cm}|p{6cm}|p{6cm}|}\hline\hline
+& \multicolumn{2}{c|}{\bf \emph{MÁQUINA ABSTRACTA MAPiCO}}\\ \cline{2-3}
+& & \\
+\multicolumn{1}{|c|}{\bf Diferencia en}& \multicolumn{1}{c|} {\bf MAPiCO Anterior} & \multicolumn{1}{|c|}{\bf MAPiCO Actual} \\
+& & \\ \hline\hline  
+& & \\
+\textbf{Especificación formal} & $(I,J) \triangleright M $ : Las reglas de \mbox{reducci'on} se realizaron con base en el establecimiento de comunicaci'on a trav'es de identificadores $ I,J$ & $(\phi_{sender},\delta_{forward}) \triangleright M$ :Las reglas de reducci'on se realizaron con base en el establecimiento de \mbox{comunicaci'on} a trav'es de \mbox{restricciones} $\phi_{sender}$ y $\delta_{forward}$.  \\ 
+& & \\ \hline 
+& & \\
+\textbf{Diseño} & Un proceso estaba representado por: $<PC,PV,PN,PA>$. \mbox{Exist'ia} el apuntador a nombres para identificar los objetos a los cuales se les enviaba mensajes & Un proceso esta representado por $<PC,PV,PA,PO,PTEMP>$. No existe el apuntador a nombres, a pesar de que en la definici'on del C'alculo se declara la utilizaci'on de nombres; no se expresa ni en la sem'antica, ni en las reglas de reducci'on de la m'aquina.\\ 
+& & \\ \hline
+& & \\
+\textbf{Implementaci'on} & Conjunto de Instrucciones no \mbox{extensibles}. Para adicionar \mbox{instrucciones} se debe volver a compilar toda la m'aquina. & Conjunto de instrucciones \mbox{extensibles}, gracias a la implementaci'on de m'odulos din'amicos. No se debe volver a compilar toda la m'aquina (ver secci'on \ref{secmoddin}).\\ 
+& & \\ \cline{2-3}
+& & \\
+& Conjunto de Instrucciones simples que representan la comunicaci'on de objetos y reenvío de mensajes: $CALL$,$ASKF$,$REPLICATE$.& Conjunto de Instrucciones mas elaboradas para la comunicaci'on de objetos y reenvío de mensajes: $FUNC$, $COMM$ y $REE$. \mbox{Estas} instrucciones representan la definici'on y evaluaci'on de \mbox{restricciones}, comunicaci'on de procesos y reenvío de mensajes. \\ 
+& & \\ \hline\hline 
+\end{tabular}
+\caption{Diferencias Implementaci'on y Reimplementaci'on de \emph{MAPICO}\label{difimplreimp}}
+\end{center}
+\end{table}
+
+
+
+\newpage
+\section{Sistema de Restricciones y Eliminaci'on de \\ Variables} \label{secElimVar}
+Durante el proceso de ejecuci'on de la M'aquina Abstracta \emph{MAPiCO}, 'esta interactúa \mbox{constantemente} con el  \emph{Store}, ya sea creando variables, adicionando informaci'on (imponiendo restricciones mediante la instrucci'on $TELL$) y evaluando la informaci'on contenida en 'este (mediante la instrucci'on $ASK$). Algunos procesos finalizan en determinado punto de la ejecuci'on dejando variables que no pueden ser alcanzadas al no existir una referencia a ellas, por tal raz'on 'estas podr'ian ser eliminardas del \emph{store} luego de propagar sus valores (\emph{arco-consistencia parcial} \footnote{Un algoritmo parcialmente arco-consistente solamente elimina un subconjunto de todos los valores que satisfacen la restricci'on para los cuales esta no es arco-consistente.}) y continuar la ejecuci'on asegurando mayor rendimiento en el momento de evaluar la consistencia del \emph{store} ante instrucciones como $TELL$ y $ASK$.\\\\
+En el presente trabajo presentaremos una propuesta que realiza el reconocimiento de estas variables. La propuesta consiste en que durante la ejecuci'on, \emph{MAPiCO} sea la encargada de suministrar la informaci'on de las variables que podr'ian eliminarse al \emph{Store} y este 'ultimo se encargue de la propagaci'on de sus valores y de su eliminaci'on dentro del Sistema de Restricciones.\\\\
+Para llevar a cabo el reconocimiento de las variables locales que pueden eliminarse se debe determinar la finalizaci'on de los procesos que las crearon, esta labor puede cumplirse evaluando cada instrucci'on $PAR$ que define los ambientes a los cuales est'an asociadas las diferentes variables (ver figura \ref{ElimVar}).
+
+\begin{figure*}[!h]
+\begin{center}
+\includegraphics[angle=0,width=13cm]{ElimVar.eps}
+\caption{\label{ElimVar} Eliminaci'on de Variables}
+\end{center}
+\end{figure*}
+
+Seg'un lo anterior, la finalizaci'on de un proceso se determina a trav'es de los diferentes ambientes de las variables enmarcados por la instrucci'on $PAR$; analizando este 'arbol, cada vez que no exista un $PAR$ interno en el transcurso de la ejecuci'on se puede decir que ese proceso finalizó y que las variables locales asociadas a 'este pueden eliminarse.\\\\
+En \emph{MAPiCO} las variables tienen asociado un identificador de proceso de creaci'on, el cu'al como su nombre lo indica contiene la informaci'on del proceso durante el cual se creo esa variable. En ese caso, si tenemos un proceso $X$ que finalizó en el transcurso de la ejecuci'on, se realiza un recorrido de la pila de variables para determinar cuales variables tienen asociado como identificador de proceso a $X$; y 'estas ser'an reportadas al \emph{Store} como candidatas de eliminaci'on. Tomando en consideración lo anterior, es posible utilizar la identificación de variables que no se usan más en la realización de un garbage collector dentro de \emph{MAPiCO}.\\\\
+Una vez que \emph{MAPiCO} cuente con la informaci'on de las variables a eliminar debe \mbox{suministrarla} al \emph{store} y 'este propagar sus valores a trav'es de un algoritmo de \emph{arco-consistencia parcial} y posteriormente eliminar estas variables. La definici'on formal \mbox{describe} al \emph{Store} como monotonicamente creciente en informaci'on, pero la eliminaci'on de variables no esta en contra de esta definici'on siempre y cuando antes se haya propagado la informaci'on (\emph{arco-consistencia}).
+
+

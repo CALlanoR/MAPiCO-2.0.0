@@ -1,0 +1,22 @@
+\chapter{CONCLUSIONES}
+\label{capconclusiones}
+En el presente trabajo se reimplement'o la m'aquina abstracta \emph{MAPiCO}, m'aquina soportada por el c'alculo l'ogico, correcto y formal \emph{PiCO}. La reimplementaci'on de \emph{MAPiCO} surge de la necesidad de mejorar la eficiencia, contemplar las modificaciones del c'alculo y extender de manera din'amica el conjunto de instrucciones de la m'aquina.\\\\
+Aunque la implementaci'on inicial cumple con los prop'ositos y requisitos para los cuales fue creada, el lenguaje en el que fue implementada, \emph{JAVA}, hace que se pierda eficiencia en el tiempo de ejecuci'on de la m'aquina, ya que por ser un lenguaje interpretado es mas lento que un lenguaje compilado, lo cual se evidencia en las pruebas realizadas.\\\\
+La actual implementaci'on se realiz'o en el lenguaje de programaci'on \emph{C}, considera directrices de precompilaci'on  y modularidad en el desarrollo, lo que garantiza tiempos de ejecuci'on mucho mas eficientes, funcionalidad modular y practicidad en la modificaciones que deban realizarse en un futuro a la m'aquina.\\\\
+Debido a que la reimplementación de \emph{MAPiCO} soporta la extensibilidad en cuanto al conjunto de instrucciones, se hace posible implementar cualquier modificación al cálculo \emph{PiCO}, de forma modular y sin reimplementar de nuevo la Máquina Abstracta.\\\\
+Otra de las características de la actual implementaci'on es que gracias a su extensibilidad, flexibilidad y modularidad puede ejecutarse como una m'aquina de m'aquinas. En este caso, se podría implementar la funcionalidad de otra máquina mediante los \emph{PlugIn's} y ejecutarlos en \emph{MAPiCO}; la Máquina Abstracta \emph{LMAN} \cite{hurtado.munoz:lman} podría implementarse bajo este criterio.\\\\
+La alternativa de Eliminación de Variables planteada en el capitulo {\bf \ref{capmapico}} (sección \ref{secElimVar}) podría significar una mejora considerable del \emph{Store}, con respecto a la propagación de variables.\\\\
+Se realizaron pruebas que determinaron la eficiencia de la reimplementaci'on de la m'aquina abstracta \emph{MAPiCO}:
+\begin{itemize}
+\item Pruebas en las que se verific'o las complejidades de cada una de las funciones utilizadas para las estructuras de listas, 'arboles, algoritmos de b'usqueda, de almacenamiento de memoria, de precompliaci'on y modularidad. Cada una de las complejidades de estas funciones se encuentran en en el {\bf capitulo \ref{capimpl}} y en los archivos de cabecera de la implementaci'on.
+\item Pruebas de carga de archivos de programa de gran tamaño en la memoria estática y de \emph{PlugIn's} en tiempo de ejecución; que confirmaron la capacidad de almacenamiento y eficiencia en modularidad/extensibilidad de la reimplementación de \emph{MAPiCO} (capitulo \ref{capimpl}).
+\item Pruebas funcionales que determinaron la correcta reimplementación de la Máquina Abstracta \emph{MAPiCO}.
+\item Las pruebas realizadas en el {\bf capitulo \ref{capprueba}} demostraron que:
+\begin{itemize}
+\item El \textbf{Escenario 2}, determinado por \emph{MAPICO JAVA} y \emph{Store C} es un $66 \%$ más eficiente que el \textbf{Escenario 1} constituido por \emph{MAPICO JAVA} y \emph{Store JAVA}.
+\item El \textbf{Escenario 3}, determinado por \emph{MAPICO C} y \emph{Store C} es un $99 \%$ más eficiente que el \textbf{Escenario 1} constituido por \emph{MAPICO JAVA} y \emph{Store JAVA}.
+\item El \textbf{Escenario 3}, determinado por \emph{MAPICO C} y \emph{Store C} es un $99 \%$ más eficiente que el \textbf{Escenario 2} constituido por \emph{MAPICO JAVA} y \emph{Store C}.
+\end{itemize}
+Con respecto a las anteriores pruebas se puede concluir que \emph{MAPiCO C} cumple con los propósitos para los cuales fue reimplementada: es eficiente ya que presenta los mínimos tiempos de ejecución, es extensible y modular en cuanto al conjunto de instrucciones y brinda una alternativa de eliminación de variables que no se necesitan mas en la ejecución.
+\end{itemize}
+\nocite*

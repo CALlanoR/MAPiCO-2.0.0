@@ -1,0 +1,1132 @@
+% impl.tex - Detalles de implementacion de macro para la tesis de grado
+%
+% autor: Alba Liliana Sarasti, Carlos Alberto Llano Rodriguez.
+% fecha: Mayo 4/ 2006. 
+% ultima modificacion:
+%
+
+\lstset{language=C, basicstyle=\fontfamily{phv}\fontseries{m}\selectfont\footnotesize}
+\chapter{IMPLEMENTACION DE LA MAQUINA ABSTRACTA}
+\label{capimpl}
+
+Para implementar la m'aquina abstracta \emph{MAPiCO}, se utiliz'o el lenguaje de programaci'on \emph{C}, se definieron varias estructuras de datos para manejar el 'area de memoria, el manejador de procesos, el paso de par'ametros a las instrucciones y las estructuras requeridas para guardar informaci'on necesaria durante la ejecuci'on de la m'aquina, todo esto siguiendo las estructuras dadas en el dise~no. Adicionalmente se us'o el precompilador de C para hacer de 'esta una implementaci'on mas flexible utilizando macros y directivas de precompilaci'on.
+
+\section{Estructuras de Datos}
+En \emph{MAPiCO} se definieron 'areas de memoria para guardar referencia de los procesos suspendidos (colas de objetos, mensajes y ask), procesos en ejecuci'on (cola de ejecuci'on), mantener el Sistema de Restricciones y la memoria del programa. Para implementar las colas, se defini'o la librer'ia \emph{List.h} la cual fue implementada utilizando macros tipo funci'on de $C$, que aumentan la velocidad de ejecucion del c'odigo porque no se pierde tiempo en llamados de funciones y permite manejar el $TAD$ parecido a los template de $C++$.
+
+Esta lista tiene una referencia al primer y 'ultimo nodo de la lista, y el n'umero de elementos en la lista.
+
+\begin{lstlisting} 
+
+#ifndef LIST_H
+#define LIST_H
+
+#define DEFINE_LIST( listTypeName, NodeList )                                  \
+struct listTypeName                                                            \
+{                                                                              \
+  int Elements;                  // TamaNo de la lista                         \ 
+  struct NodeList *head, *tail;  // Referencia el inicio y final de la lista   \                 
+};                                       
+...
+#endif // LIST_H 
+
+\end{lstlisting}
+
+La librer'ia List provee las siguientes macros:
+
+\begin{lstlisting} 
+
+#ifndef LIST_H
+#define LIST_H
+
+// Define una lista con cabecera y cola
+#define DEFINE_LIST( listTypeName, nodeTypeName )              \
+
+// Crea un nueva lista
+#define LIST(NewList)                                          \
+
+// Retorna la longitud de la lista. Complejidad: O(1)
+#define LENGTH_LIST(List) ( (List)->Elements )
+
+// Inserta un dato al inicio de la lista. Complejidad: O(1)
+#define INSERT_AT_HEAD( List, Object )                         \
+
+// Inserta un nuevo dato al final de la lista. Complejidad: O(1)
+#define INSERT_AT_END( List, Object )                          \
+
+// Devuelve la referencia del inicio de la lista. Complejidad: O(1)
+#define FIRST_NODE(List) ( (List)->head )
+
+// Devuelve la referencia del final de la lista. Complejidad: O(1)
+#define END_NODE(List) ( (List)->tail )
+
+// Agrega una lista al final de otra lista. Complejidad: O(1)
+#define ADD_AT_END(List,ListAppend)                            \
+
+// Inserta un nuevo dato en la lista en un indice especifico. Complejidad: O(N)
+#define INSERT_AT(List,index,Object)                           \
+
+// Elimina un dato de la lista de un indice especifico. Complejidad: O(N)
+#define DEL_AT(List,index)                                     \
+
+// Devuelve un dato de la lista de un indice especifico. Complejidad: O(N)
+#define GET_AT(List,index,Object)                              \
+
+// Asigna un dato a la lista en un indice especifico. Complejidad: O(N)
+#define SET_AT(List,index,Object)                              \
+
+// Libera una Lista. Complejidad: O(N)
+#define FREE_MEMORY_LIST(List)                                 \
+
+// Imprime una Lista. Complejidad: O(N)
+#define PRINT_LIST(List)                                       \  
+
+#endif // LIST_H
+
+\end{lstlisting}
+
+
+La librer'ia \emph{NodeList.h} define un nodo de la lista. Estos nodos pueden almacenar cualquier tipo de dato porque tienen una referencia a un elemento de tipo void * (puntero gen'erico), el cual permite recibir cualquier tipo de argumento puntero sin que se produzca un error de discordancia de tipo. La librer'ia \emph{NodeList.h} tiene una referencia al siguiente nodo, al anterior y al elemento de la lista.\\
+
+\begin{lstlisting} 
+
+#ifndef NODELIST_H 
+#define NODELIST_H 
+
+//Define los apuntadores siguiente y atras de una lista 
+#define DEFINE_LINK( listTypeName, nodeTypeName )                      \ 
+   struct nodeTypeName * prev##listTypeName, * next##listTypeName      \  
+   ... 
+#endif // NODELIST_H 
+
+struct NodeList 
+{ 
+   void *Data;                     // Dato del nodo
+   DEFINE_LINK(NodeList,NodeList); // Siguiente nodo y anterior nodo
+}; 
+\end{lstlisting}
+
+
+Las macros dadas por la librer'ia son: 
+\\
+
+\begin{lstlisting} 
+
+#ifndef NODELIST_H
+#define NODELIST_H
+
+// Crea un nuevo nodo con un dato especifico
+#define NODELIST(Node,Object)
+
+// Crea un nuevo nodo con un dato especifico y un siguiente nodo 
+#define NODELIST_CONTINUATION(Node,Object,Continuation)
+
+// Asigna un siguiente nodo 
+#define SETNEXT(Node,Continuation)
+
+// Asigna un dato al nodo 
+#define SETDATA(Node,Object)
+
+// Devuelve el siguiente nodo 
+#define GETNEXT(Node)
+
+// Devuelve el dato del nodo 
+#define GETDATA(Node)
+
+// Devuelve un dato de un indice especifico 
+#define GETDATAAT(Node,index,Respuesta)
+
+// Devuelve la longitud de la lista 
+#define LENGTH(Node,Respuesta)
+
+// Libera la lista
+#define FREE_MEMORY_NODELIST(Node)
+
+// Imprime la lista
+#define PRINT_NODELIST(Node)
+
+#endif // NODELIST_H
+\end{lstlisting}
+
+
+El almacenamiento del programa esta en una estructura de datos, la cual esta definida por un arreglo de caracteres que guarda el $bytecode$ cargado desde un archivo binario. 'Este archivo contiene el c'odigo de las instrucciones de m'aquina que especifican un programa. La librer'ia \emph{Loader} es usada para cargar este archivo en la memor'ia del programa, la cual esta definida as'i:\\
+
+\begin{lstlisting}
+
+// Estructura que almacena el archivo en bytes y su tamaNo
+struct strProgram
+{
+   int Size;   // Longitud programa en memoria
+   char *File; // Programa en memoria
+   ...
+};
+
+typedef struct strProgram *Program; // Tipo para definir el programa en bytes
+\end{lstlisting}
+
+Para manejar la memoria de programa (en la libreria Loader) estan las funciones para cargar, obtener bytes, words o double words de la memoria.
+\begin{lstlisting}
+
+// Cargar un programa en bytes en un arreglo en memoria
+Program Loader(char *FileName);
+ 
+// Retorna un byte 
+char get8(Program Data, int Pointer);
+
+// Retorna un word 
+short get16(Program Data, int Pointer);
+
+// Retorna un double word 
+int get32(Program Data, int Pointer);
+\end{lstlisting}
+
+Para el manejo del Sistema de Restricciones se defini'o la librer'ia \emph{StoreMA.h}, la cual \mbox{realiza} la interfaz con el Sistema de Restricciones de Dominios Finitos hecho en C \cite{garcia.vasquez:sis-res-dom-finito}.\\
+
+La estructura esta definida de la siguiente manera: 
+\begin{lstlisting}
+
+struct str_StoreMA
+{
+   Store s;          // Store de Restricciones          
+   Indexicals i;     // Indexicals     
+   Stamp *t;         // Stamp    
+   int *indextemp;   // IndexTemp    
+   int Response;     // Codigo de respuesta de la accion    
+   char *Error;      // String con el mensaje de error    
+   int inicializado; // Indica si el store ha sido inicializado    
+};
+typedef struct str_StoreMA *StoreMA;
+
+//Se define el tipo FrameConstMA para la interfaz con el Store
+typedef FrameConst FrameConstMA;
+
+\end{lstlisting}
+
+Para interactuar con el \emph{Store} estan las siguientes funciones:
+\begin{lstlisting}
+
+// Inicializa el Store
+StoreMA inicStoreMA(void);
+
+// Realiza un Tell al Store
+StoreMA tellMA(StoreMA sm, FrameConstMA fc);
+
+// Realiza un Ask al Store 
+StoreMA askMA(StoreMA sm, FrameConstMA fc);
+
+// Inicializa una RestricciOn
+FrameConstMA InicFrameConstMA(int, int);
+
+// Inicializa una RestricciOn a partir de otra
+FrameConstMA InicpFrameConstMA(FrameConstMA fc);
+
+// Devuelve una restriciOn hija por la izquierda 
+FrameConstMA getLefSonFrameConstMA(FrameConstMA);
+
+// Devuelve una restriciOn hija por la derecha
+FrameConstMA getRigSonFrameConstMA(FrameConstMA);
+
+// Asigna una restriciOn hija por la izquierda
+void setLefSonFrameConstMA(FrameConstMA, FrameConstMA);
+
+// Asigna una restriciOn hija por la derecha 
+void setRigSonFrameConstMA(FrameConstMA, FrameConstMA);
+
+// Libera la una restricciOn 
+void DestruirFrameConstMA(FrameConstMA);
+
+// Imprime una restricciOn
+void ImprimirFrameConstMA(FrameConstMA);
+
+// Indica si el Store se encuentra Inicializado
+int getInicializadoMA(StoreMA sm);
+
+\end{lstlisting}
+
+
+La librer'ia \emph{NodeArg.h} implementa un 'arbol que permite traducir la ligadura de variables y de m'etodos, la estructura es similar a la estructura de ligaduras de la implementaci'on anterior \cite{buss.heredia:mapico}, pero tiene un campo adicional, su tipo: (variable o m'etodo).
+\begin{lstlisting}
+
+struct NodeList 
+{ 
+   void *Data; // Dato del nodo
+   DEFINE_LINK(NodeList,NodeList);  // Siguiente nodo y anterior nodo
+};
+
+struct NodeArg
+{
+   void *Data;                         // Dato del nodo
+   int Type;                           // tipo de nodo (Variable o Metodo)
+   DEFINE_LINK_ARG(NodeArg, NodeArg);  // Siguiente nodo y anterior nodo  
+};
+\end{lstlisting}
+
+
+Adicionalmente para pasar par'ametros en el envio de mensajes se implement'o la librer'ia \emph{Arguments.h} que permite almacenar las variables o m'etodos por medio de la librer'ia \emph{NodeArg.h} y las restricciones por medio de la librer'ia \emph{StoreMA.h}
+\begin{lstlisting}
+
+struct Arguments 
+{ 
+   NodeArg nArg;        // Variables o Metodos
+   FrameConstMA Fconst; // RestricciOn
+   short Type;          // Type = { -1[Not Defined], 0[NodeArg], 1[FrameConst] }          
+};
+\end{lstlisting}
+
+
+La estructura para registrar los objetos evaluados para un mensaje, se implement'o en la librer'ia \emph{ObjectEval.h} la cual permite identificar en memoria los objetos a los cuales les ha llegado el mensaje pero no lograron satisfacer la fuci'on $sender$.
+\begin{lstlisting}
+
+struct ObjEval
+{
+   int *PCS;       // Arreglo de direcciones
+   int NumObjects; // Numero de Objetos que contiene el arreglo
+   int Longitud;   // Longitud inicial del arreglo      
+};
+
+//Tipo de ObjectEval
+typedef struct ObjEval *ObjectEval;
+\end{lstlisting}
+
+La anterior estructura implementa un arreglo con las direcciones de los objetos en el $bytecode$, que no lograron satisfacer la funci'on $sender$, este es un arreglo que se encuentra siempre ordenado por medio del algoritmo de ordenaci'on $HeapSort$ (implementado en la librer'ia \emph{HeapSort.h}) para una r'apida validaci'on de objetos.
+
+\section{Estructura de un Proceso}
+El proceso esta representando por una septupla donde esta la informaci'on necesaria para ejecutarlo. Estas variables son el puntero a c'odigo, puntero a variables, puntero a m'etodos, puntero para paso de par'ametros y de definici'on de restricciones, puntero a objetos, puntero auxiliar y un puntero temporal reservado para uso futuro. A excepci'on del puntero a c'odigo \textbf{PC}, los apuntadores fueron definidos como void * para guardar cualquier tipo de informaci'on.
+
+Todas estas variables son atributos de la librer'ia \emph{Process.h}, en donde hay funciones para obtener cada uno de los atributos de dicha librer'ia.
+
+\begin{lstlisting}
+
+struct strProcess 
+{
+   int PC;      // Contador de Programa       
+   void *PV;    // Apuntador a Variables     
+   void *PM;    // Apuntador a Metodos  
+   void *PA;    // Apuntador a Argumentos       
+   void *PO;    // Apuntador a Objetos   
+   void *PAUX;  // Apuntador auxiliar  
+   void *PTEMP; // Apuntador temporal  
+};
+
+// Tipo para definir un proceso
+typedef struct strProcess *Process;
+\end{lstlisting}
+
+
+\section{Estructura de los PlugIn's}
+Para cargar e identificar los \emph{PlugIn's} se defini'o una estructura que apunta al manejador y a la ruta donde se encuentra la librer'ia din'amica, la estructura es la siguiente:
+
+\begin{lstlisting}
+
+struct str_PlugIn 
+{ 
+   void *Handle;      // Apuntador al Manejador del PlugIn
+   char *PathLibrary; // Path donde se encuentra la libreria dinamica
+}; 
+typedef struct str_PlugIn PlugIn; 
+\end{lstlisting}
+
+
+Cada PlugIn puede contener una o m'as instrucciones que ejecuta la M'aquina Abstracta \emph{MAPiCO}, que son almacenadas en memoria mediante una estructura que contiene un identificador 'unico y el nombre de la instrucci'on.
+
+\begin{lstlisting}
+
+struct str_Instruction 
+{ 
+   int KeyPlugIn;      //  Llave para identificar la instrucciOn
+   char *NameFunction; // Nombre de la funciOn
+}; 
+
+//Tipo para definir una InstrucciOn
+typedef struct str_Instruction *Instruction; 
+
+\end{lstlisting}
+
+
+Cada instrucci'on es guardada en un 'arbol binario ordenado que facilita la inserci'on y la b'usqueda de las mismas. 
+
+\begin{lstlisting}
+
+struct NodeTree
+{     
+   int key;                // Identificador del nodo
+   void *Value;            // Valor del nodo
+   struct NodeTree *Left;  // Hijo izquierdo del nodo 
+   struct NodeTree *Right; // Hijo derecho del nodo
+};
+
+//Tipo para definir un 'arbol binario
+typedef struct NodeTree *NodeTree; 
+\end{lstlisting}
+
+
+Para pasar informaci'on a los \emph{PlugIn's} se defini'o una estructura donde se almacena principalmente las variables que necesitan las instrucciones, los \emph{PlugIn's} y el 'arbol de instrucciones cargados en la inicializaci'on; adem'as se almacena el \emph{Store} utilizado por la M'aquina Abstracta \emph{MAPiCO}. La Estructura para el paso de par'ametros es la siguiente:
+
+\begin{lstlisting}
+
+struct str_Parameters 
+{ 
+   List VblesMAPiCO;      //Lista de variables 
+   NodeTree Instructions; //Arbol de Instrucciones 
+   PlugIn *PlugIns;       //Array con los apuntadores a los Plugin's cargados 
+   int NumPlugInsLoad;    //Numero de Plugin's que se cargaron en la ejecucion 
+   int Response;          //Codigo de respuesta de la accion 
+   char *Error;           //String con el mensaje de error 
+   int OpCodeSchedule;    //Codigo OpCode de la funcion que realiza el Schedule 
+   StoreMA sMA;           //Store MAPiCO 
+}; 
+
+// Tipo para definir los parametros
+typedef struct str_Parameters Parameters; 
+\end{lstlisting}
+
+Se realizaron pruebas exitosas con respecto a la carga de las diferentes estructuras de \emph{MAPiCO}: Carga de archivos de programa de gran tamaño en la memoria estática y de \emph{PlugIn's} en tiempo de ejecución; estas pruebas determinaron una gran capacidad de almacenamiento y eficiencia en la extensibilidad de las instrucciones de \emph{MAPiCO}. En la Tabla \ref{TimeLoad} se presentan los tiempos de carga de las diferentes estructuras para los programas Factorial, SEND + MORE = MONEY (SMM) y NReinas (ver capitulo \ref{capprueba}):
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{|c|r|r|r|r|p{1in}|p{1in}|p{1in}|p{1in}|} \hline\hline
+\multicolumn{1}{|c|}{\bf Programa } & \multicolumn{4}{c|}{\bf Información de Cargue } \\ \cline{2-5}
+\multicolumn{1}{|c|}{\bf }&\multicolumn{1}{c|}{\bf Cargue} & \multicolumn{1}{c|}{\bf Ejecución} & \multicolumn{1}{c|}{\bf Cargue} & \multicolumn{1}{c|}{\bf Tiempo Total} \\ 
+\multicolumn{1}{|c|}{\bf }&\multicolumn{1}{c|}{\bf ProgramBytes} & \multicolumn{1}{c|}{\bf ProgramBytes} & \multicolumn{1}{c|}{\bf PlugIn's} & \multicolumn{1}{c|}{} \\ \hline\hline 
+{\bf Factorial}& &  &  &  \\ \hline
+0 & 0 & 0,0008 & 0,0001 & 0.0009 \\ \hline
+1 & 0 & 0,003  & 0,0001 & 0,0031 \\ \hline
+2 & 0 & 0,005  & 0,0001 & 0,0051 \\ \hline
+3 & 0 & 0,008  & 0,0001 & 0.0081 \\ \hline
+4 & 0 & 0,011  & 0,0001 & 0.0111 \\ \hline
+5 & 0 & 0,014  & 0,0001 & 0.0141 \\ \hline
+6 & 0 & 0,020  & 0,0001 & 0.0201 \\ \hline
+7 & 0 & 0,023  & 0,0001 & 0.0231 \\ \hline
+{\bf SMM} & 0,001 & 0,068  & 0,0001 & 0.0691 \\ \hline
+{\bf NReinas} & 0,0001 & 0,0227  & 0,0001 & 0,0229 \\ \hline\hline
+\end{tabular}
+\caption{Tiempos de Carga en milisegundos de Estructuras de \emph{MAPiCO} \label{TimeLoad}}
+\end{center}
+\end{table}
+
+
+\section{Bloque Principal de la M'aquina}
+Todos los \emph{PlugIn's} de la M'aquina Abstracta \emph{MAPiCO} son invocados desde el ejecutable \emph{MAPiCO.c}, ah'i se encuentran definidos los registros de la m'aquina, las colas de procesos suspendidos, las colas de ejecuci'on, la memoria de traducci'on y la memoria del programa. Los registros de la m'aquina son declarados como tipo void * (puntero gen'erico) permitiendo que estos registros puedan ser configurados por fuera de la m'aquina para almacenar cualquier tipo de informaci'on.
+
+\begin{lstlisting}
+
+int Execute(char *fileName)
+{
+   //////////////////////////////
+   // DECLARACION DE VARIABLES //
+   //////////////////////////////
+
+   //Vbles para manejo de PlugIn's
+   short OpCode=0;                            // OpCode de la instruccion
+   Configuration VarConfig;                   // Variable de configuracion inicial
+   Parameters (*Instruction)(Parameters);     // Funcion de la instruccion
+   Parameters argvPlugIn;                     // Parametros para los PlugIn's
+   
+   //Declaracion de colas
+   List RunQ;                                 // Cola de Ejecucion
+   List ObjQ;                                 // Cola de Objetos
+   List MsgQ;                                 // Cola de Mensajes
+   List AskQ;                                 // Cola de Ask
+   
+   //Registros de MAPiCO
+   int PCA;                                   // Puntero a Codigo Actual
+   void *PVA;                                 // Puntero a Variables Actual
+   void *PMA;                                 // Puntero a Metodos Actual
+   void *PAA;                                 // Puntero a Argumentos Actual
+   void *POA;                                 // Puntero a Objetos Actual
+   void *PAUX;                                // Puntero Auxiliar
+   void *PTEMP;                               // Puntero Temporal
+   
+   //Vble para definir procesos
+   Proceso Proc;
+   
+   //Vble que contiene el ProgramByte
+   Program Data;   
+   
+   //////////////////////////////////
+   // CARGAR CONFIGURACION INICIAL // 
+   //////////////////////////////////
+   VarConfig = loadConfiguration(); 
+   
+   //Inicializador de Parametros 
+   argvPlugIn = newParameters(VarConfig.MaxOpenPlugIns);  
+   
+   //Lectura de todo el archivo de entrada 
+   Data = Loader(fileName); 
+   
+   /////////////////////////////////
+   // CARGA DE TODOS LOS PLUGIN's // 
+   /////////////////////////////////
+   argvPlugIn = loadPlugIns(argvPlugIn, VarConfig.PathPlugIns); 
+   if(getResponse(argvPlugIn)==ERROR) 
+   { 
+      printf("Carga de PlugIns. [ERROR]: \%s", getError(argvPlugIn)); 
+      exit(1); 
+   } 
+   
+   ...
+   
+}
+\end{lstlisting}
+
+
+En \emph{MAPiCO.c} se defini'o una funci'on \emph{loadConfiguration} que carga la configuraci'on inicial de la m'aquina, la cual se encuentra en el archivo \emph{MAPiCO.conf}, que contiene el OpCode de la instrucc'ion que realiza el cambio de proceso, la ruta donde se encuentra el archivo con la lista de los \emph{PlugIn's} y el m'aximo n'umero de \emph{PlugIn's} que se cargaran. La opci'on \emph{schedule} no es obligatoria definirla en la configuraci'on ya que se puede configurar en los \emph{PlugIn's}.
+
+\begin{tabular}{|p{14cm}|}
+\hline
+\\
+\#Archivo de Configuraci'on de \emph{MAPiCO} \\\\
+\#OpCode de la funcion que realizara el Schedule de los procesos \\
+schedule= OPCODE\_SCHED \\
+\\
+\#Path donde se encuentra archivo que contiene las rutas de los Plugin's \\
+pathPlugInList="../doc/PlugIns.list" \\
+\\
+\#Maximo numero de Plugin's \\
+maxOpenPlugIns=5 \\
+\\
+\hline
+\end{tabular}
+
+\begin{lstlisting}
+
+
+// Lee la configuraciOn de MAPiCO.conf y la guarda en memoria 
+Configuration loadConfiguration(void)
+{
+   Configuration varConfig;
+   FILE *FileConfig;
+   char Line[MAXIMO];   
+   char *Value, *Key;
+   int TamLine=0;
+   int Pos=0;
+      
+   varConfig.OpCodeSchedule = NOT_FOUND;
+               
+   //Abrir archivo de configuracion MAPiCO.conf
+   if((FileConfig=fopen("../doc/MAPiCO.conf","r"))==NULL)
+   {
+      printf("[ERROR]: \%s.\n",NOT_FILE_CONFIG);
+      exit(1);
+   }
+   else
+   {         
+         while(!feof(FileConfig))
+         {   
+            fgets(Line, MAXIMO, FileConfig);
+
+            if(Line[0]!='#' && !iscntrl(Line[0]))
+            {                                                                              
+               //Se Elimina el salto de linea
+               TamLine = strlen(Line);        
+               if(iscntrl(Line[TamLine-1]))
+                  Line[TamLine-1]='\0';
+               else
+                  Line[TamLine]='\0';   
+               
+               //Posicion donde se encuentra el separador "="
+               Pos = strcspn(Line,"=");
+   
+               Key = (char *)malloc(sizeof(char)*Pos);
+               Value  = (char *)malloc(sizeof(char)*(TamLine - Pos));
+                     
+               strncpy(Key, Line, Pos);
+               strncpy(Value, (Line + Pos + 1), (TamLine - Pos));
+                                                   
+               if(strcmp(Key,"schedule")==0)
+                  varConfig.OpCodeSchedule = atoi(Value);
+               else
+               {
+                  if(strcmp(Key,"pathPlugInList")==0)
+                    strncpy(varConfig.PathPlugIns,(Line+Pos+1),(TamLine-Pos));
+                  else
+                  {
+                     if(strcmp(Key,"maxOpenPlugIns")==0)
+                        varConfig.MaxOpenPlugIns = atoi(Value);
+                  }
+               }//else::if(strcmp(schedule...
+            }//if(Line[0]...   
+         }//while               
+   }//else
+      
+   return varConfig;
+}
+\end{lstlisting}
+
+
+Una vez cargados el archivo de entrada o program bytes, los \emph{PlugIn's} y sus instrucciones e inicializadas las colas de ejecuci'on, se crea la lista de variables que servir'a de par'ametro de entrada y de salida a las instrucciones de la m'aquina, en ese momento se adicionan las colas de ejecuci'on, el program bytes, el contador de variables, el proceso inicial, el opcode de $schedule$ y un flag de finalizaci'on de \emph{MAPiCO}.
+
+\begin{lstlisting}
+
+   /////////////////////////////////////////////////////////
+   // CREACION DE LA LISTA DE VARIABLES PARA LOS PLUGIN'S // 
+   /////////////////////////////////////////////////////////
+   //Se agrega el flag Finish que indica si MAPiCO debe seguir ejecutandose 
+   argvPlugIn = addVblePlugIn(argvPlugIn, Finish); 
+   
+   //Se agrega el proceso a la lista de variables de los PlugIn's 
+   argvPlugIn = addVblePlugIn(argvPlugIn, Proc); 
+   
+   //Se agrega el contador de variables a la lista de variables de los PlugIn's 
+   argvPlugIn = addVblePlugIn(argvPlugIn, VarCounter); 
+   
+   //Se agrega el program bytes a la lista de variables de los PlugIn's 
+   argvPlugIn = addVblePlugIn(argvPlugIn, Data); 
+   
+   //Se agregan las colas de ejecucion RunQ, ObjQ, MsgQ, AskQ 
+   argvPlugIn = addVblePlugIn(argvPlugIn, RunQ); 
+   argvPlugIn = addVblePlugIn(argvPlugIn, ObjQ); 
+   argvPlugIn = addVblePlugIn(argvPlugIn, MsgQ); 
+   argvPlugIn = addVblePlugIn(argvPlugIn, AskQ); 
+      
+   //Se agrega el codigo de la funciOn que realiza el Schedule 
+   argvPlugIn = setOpCodeSchedule(argvPlugIn, VarConfig.OpCodeSchedule); 
+   
+\end{lstlisting}
+      
+
+Con la lista de par'ametros cargada, inicia el ciclo principal de ejecuci'on que solo termina cuando la cola de ejecuci'on $RunQ$ esta vacia, condici'on que es controlada por la variable "$Finish$", la cual cambia de estado en la funci'on $schedule$. Dentro del ciclo, se realiza la selecci'on de la instrucci'on que se debe ejecutar por medio de la funci'on \emph{getInstruction}, la cual retorna un apuntador a la funci'on de la instrucci'on, pasandole la lista de par'ametro para su ejecuci'on.
+ 
+\begin{lstlisting}
+
+   /////////////////////////////////
+   // EJECUCION DEL PROGRAM BYTES // 
+   /////////////////////////////////
+   while(*Finish != OK) 
+   {  
+           
+      //Captura los valores de los registros 
+      PCA = getPC(Proc); 
+      
+      //Lectura del program bytes 
+      OpCode = get8(Data, PCA);  
+         
+      /////////////////////////////////////////////
+      // BUSQUEDA Y EJECUCI'ON DE LA INSTRUCCION // 
+      /////////////////////////////////////////////
+      // Busqueda de la instrucciOn  
+      Instruction = getInstruction(argvPlugIn, OpCode); 
+      
+      // Ejecuci'on de la instrucciOn enviando la lista de parametros 
+      argvPlugIn = Instruction(argvPlugIn); 
+      
+      ////////////////////////////////////////////
+      //RECUPERACION DE LAS VARIABLES DE MAPiCO // 
+      ////////////////////////////////////////////
+      // Recupera el flag de ejecuci'on 
+      Finish = getAtVblePlugIn(argvPlugIn,0); 
+      
+      // Recupera el proceso actual 
+      Proc = getAtVblePlugIn(argvPlugIn,1); 
+      
+      // Recupera el PC 
+      PCA = getPC(Proc);               
+      
+   }//while
+\end{lstlisting}
+
+
+\section{Implementaci'on de Instrucciones}
+El ciclo de ejecución principal consta de una serie de instrucciones que la máquina ejecuta de acuerdo a las reglas de reducción de la máquina.\\\\
+La instrucción \textbf{NEWV} crea un nuevo nodo en el 'arbol de traducci'on de variables y actualiza el \textbf{PVA}.\\
+\\
+La instrucción \textbf{PAR} crea un nuevo proceso y lo inserta al final de la cola de ejecución (\textbf{RunQ}).
+
+\textbf{FUNC} determina el inicio de la ejecución de una funci'on.
+
+Hay tres instrucciones para manejar el paso de par'ametros. Dos de ellas, \textbf{PUSHV} y \textbf{PUSHM}, adicionan par'ametros a la pila de par'ametros (\textbf{PUSHV} adiciona variables y \textbf{PUSHM} adiciona métodos)  y \textbf{POP} obtiene los par'ametros de la pila.
+\\
+\begin{lstlisting}
+
+Parameters PUSHV(Parameters argv)
+{
+  //Registros que se necesita de MAPiCO
+  int    PCA;          //Puntero a Codigo Actual
+  NodeList PVA;        //Puntero a Variables Actual
+  Auxiliar PAA;        //Puntero a Argumentos
+
+  Proceso Proc;        //Vble para definir un proceso
+  Program Data;        //Vble para el program bytes
+  NodeArg NodeTempArg; //Vble para guardar el parametro
+
+  //Otras Variables
+  int Longitud=0;
+  int *Variable;
+  int ArgumentoPushv;
+  int *Finish;
+  NodeArg FPAUX;
+
+  //Recuperar el primer parametro (Proceso)
+  Proc = getAtVblePlugIn(argv,1);
+
+  //Recuperar el tercer parametro (Data)
+  Data = getAtVblePlugIn(argv,3);
+
+  //Recuperar el valor de los registros
+  PCA = getPC(Proc);
+  PVA = getPV(Proc);
+  PAA = getPA(Proc);
+   
+  Variable = (int *)malloc(sizeof(int)); 
+  LENGTH(PVA, Longitud);
+  ArgumentoPushv = get16(Data, PCA+1);
+ 
+  if(Longitud >= ArgumentoPushv)
+  {
+    //Valor de Variable de la lista del PV   
+    GETDATAAT(PVA, ArgumentoPushv, Variable);          
+    NODEARG(NodeTempArg, Variable, VAR);
+         
+    if(GETTYPE(PAA)==NOT_TYPE)
+    {
+      //Salvar argumentos en PAA
+      SETNODEARG(PAA, NodeTempArg);
+      SETTYPE(PAA, NODEARGM);
+    }
+    else
+    {
+      //Agregar el nuevo argumento
+      FPAUX = GETNODEARG(PAA);                
+      SETNEXT_ARG(NodeTempArg, FPAUX);                   
+      SETNODEARG(PAA, NodeTempArg);                 
+      SETTYPE(PAA, NODEARGM);
+    }
+     
+    //Incrementar el PCA (siguiente instruccion)
+    PCA = PCA + INST_BYTE + VAR_BYTE;
+
+    //Asignacion de nuevos valores
+    setPC(Proc, PCA);
+    setPA(Proc, PAA);
+  }
+  else
+  {
+    Finish = (int *)malloc(sizeof(int));
+    *Finish = OK;
+    argv = setAtVblePlugIn(argv,Finish,0);
+  }
+
+  //Guardar proceso en la lista de vbles
+  argv = setAtVblePlugIn(argv,Proc,1);
+ 
+  //Retorno de argumentos
+  return argv;
+}
+\end{lstlisting}
+
+
+Los procesos objeto pueden definirse como replicados \textbf{COBJCC} o no replicados \mbox{\textbf{OBJCC}}, por tal razón se cuenta con instrucciones que insertan el objeto en la cola $RunQ$ y los mensajes que se encuentran en $MsgQ$ los adiciona en la cola de ejecución.
+\\
+\\
+La instrucción \textbf{CALL} evalua si la cola de objetos $ObjQ$ contiene elementos, si no los tiene, el proceso es insertado en la cola de mensajes suspendidos $MsgQ$, en caso contrario selecciona el primer objeto que aún no haya sido evaluado para el mensaje, (obteniendo de sus parámetros el \textbf{PC} donde inicia la función $sender$ del objeto, si el objeto es replicado se conservará en $ObjQ$, de lo contrario será eliminado de la misma y creará un nuevo proceso en $RunQ$ para evaluar el mensaje.\\
+\\
+La instrucción \textbf{COMM} busca el método al que hace referencia el mensaje en el objeto si lo encuentra crea un nuevo proceso en $RunQ$ apuntando a la primera instrucción del m'etodo requerido con el \textbf{PV}, \textbf{PM}, \textbf{PO}, y \textbf{PA} del proceso actual. Si no encuentra el método se finaliza la ejecución de la instrucción \textbf{COMM}.\\
+\\
+La instrucción \textbf{REE} crea un nuevo proceso en $RunQ$ apuntando a la primera \mbox{instrucción} de la funci'on $forward$ del objeto.\\
+\\
+Para el manejo de restricciones hay varias instrucciones, algunas de ellas como \mbox{\textbf{TERMV}}, \textbf{TERMC}, \textbf{TERMF}, \textbf{ATOM} son para construir las restricciones y otras como \textbf{TELL}, \textbf{ASK} y \textbf{ASKF} para adicionar y evaluar la información del Sistema de Restricciones.
+\\\\
+Las instrucciones \textbf{TERMV}, \textbf{TERMC}, \textbf{TERMF}, \textbf{ATOM} tienen el mismo comportamiento pero su diferencia radica en la información que almacenan.
+
+\begin{lstlisting}
+
+Parameters TERMV(Parameters argv)
+{
+  int      PCA;   //Program Counter
+  NodeList PVA;   //Program Variable
+  Auxiliar PAA;   //Program Argument Actual
+  Auxiliar PAUX;  //Puntero Auxiliar
+  Proceso Proc;   //Vble para definir procesos
+  //Otras Variables
+  int VariableTERMV, Longitud;
+  FrameConstMA faux, FPAUX;
+  Program Data;
+  int *Variable;
+  int *Finish; 
+ 
+  Var = faux = FPAUX = NULL; 
+  Variable = (int *)malloc(sizeof(int));
+ 
+  //Recuperacion del primer parametro
+  Proc = getAtVblePlugIn(argv,1);
+ 
+  //Recuperacion del tercer parametro
+  Data = getAtVblePlugIn(argv,3);
+ 
+  //Se recuperan los valores de los registros
+  PCA =  getPC(Proc);
+  PVA =  getPV(Proc);
+  PAA = getPA(Proc);
+  PAUX =  getPAUX(Proc);
+
+  //Longitud de la lista de Variable
+  LENGTH(PVA,Longitud);
+  VariableTERMV = get16(Data, PCA+1);
+   
+  if(Longitud >= VariableTERMV) {
+    //Valor de Variable de la lista del PV   
+    GETDATAAT(PVA, VariableTERMV, Variable);
+
+    //Se recupera el FrameConst que contiene el PAUX         
+    FPAUX = GETFRAMECONST(PAUX);
+     
+    //Validacion del FrameConst de PAUX
+    argv = ValidFrameConst(argv, FPAUX);
+    if(getResponse(argv)==ERROR) {
+      return argv;
+    }
+
+    faux = InicFrameConstMA(VARIABLEMA, *Variable);     
+     
+    if(getLefSonFrameConstMA(FPAUX)==NULL) {
+         setLefSonFrameConstMA(FPAUX, faux);
+    }
+    else {
+      setRigSonFrameConstMA(FPAUX, faux);
+        
+      if(GETFRAMECONST(PAA)==GETFRAMECONST(PAUX)) {                       
+        SETFRAMECONST(PAUX, faux);           
+        SETTYPE(PAUX, FRAMECONST);
+      }
+    }
+      
+    //Incrementar el PCA para la siguiente instruccion
+    PCA = PCA + INST_BYTE + VAR_BYTE;
+     
+    faux = NULL;
+    //Asignacion de nuevo valor del Frame al que debe apuntar PAUX
+    SETFRAMECONST(PAUX, FPAUX);
+    SETTYPE(PAUX, FRAMECONST);
+
+    //Asignacion de los nuevos valores
+    setPC(Proc, PCA);
+    setPAUX(Proc, PAUX);
+
+    //Se guardan las variables en la lista de vbles de los PlugIn's
+    argv = setAtVblePlugIn(argv,Proc,1);
+  }
+  else {
+     Finish = (int *)malloc(sizeof(int));
+     *Finish = OK;          
+     argv = setAtVblePlugIn(argv,Finish,0);
+  }
+
+  //Retorno de los argumentos
+  return argv;
+}
+\end{lstlisting}
+
+
+Las instrucciones \textbf{ASK}, \textbf{ASKF} y \textbf{TELL}, evaluan y adicionan información al Sistema de Restricciones. Todas usan el apuntador \textbf{PAA} como referencia al árbol de \mbox{restricciones}.\\
+
+\begin{lstlisting}
+
+Parameters TELL(Parameters argv)
+{
+   ...
+             
+   sMA = tellMA(sMA, FPAA);
+  
+   if(LENGTH_LIST(MsgQ)!=0)
+   {
+      ADD_AT_END(RunQ,MsgQ);
+      LIST(MsgQ);     
+   }
+  
+   if(LENGTH_LIST(AskQ)!=0)
+   {  
+      ADD_AT_END(RunQ,AskQ);
+      LIST(AskQ);
+   }
+
+   ...
+  
+   return argv; //Retorno de argumentos            
+}
+\end{lstlisting}
+
+
+La instrucción \textbf{ASK} evalua la información (respuesta) del sistema de restricciones: si el sistema responde \emph{SUSPENDED} quiere decir que no puede deducir ni verdadero ni falso, entonces el proceso es adicionado a la cola \textbf{AskQ}; si el sistema retorna \emph{UNENTAILED} (falso)  continua con la ejecución de otro proceso y el proceso actual es eliminado; y si responde \emph{ENTAILED} (verdadero) continua con la siguiente instrucción del proceso actual. \\
+
+\begin{lstlisting}
+
+Parameters ASK(Parameters argv)
+{
+   ...
+        
+   sMA = askMA(sMA, FPAA);
+     
+   switch (getResponseMA(sMA))
+   {
+      case ENTAILED_MA:
+         //Incrementar PC
+         PCA++;
+         break;
+      case UNENTAILED_MA:
+         //Buscar instruccion encargada de realizar el schedule
+         Instruction = getInstruction(argv, getOpCodeSchedule(argv));
+              
+         //Ejecucion de la instruccion
+         argv = Instruction(argv);                             
+         break;
+       case SUSPENDED_MA:
+         if(LENGTH_LIST(AskQ)!=0) {  
+            ADD_AT_END(RunQ,AskQ);
+            LIST(AskQ);
+         }
+         break;
+    }
+     
+    ...
+                                      
+   return argv; //Retorno de argumentos            
+}
+\end{lstlisting}
+
+
+
+\section{Módulos Din'amicos - Extensi'on de Instrucciones} \label{secmoddin}
+
+Las librer'ias din'amicas son una forma práctica de construir software extensible y \mbox{modular}, estas son utilizadas para implementar $PlugIn's$ o m'odulos que son cargados por un programa en tiempo de ejecución. \\
+\\
+Las instrucciones que ejecuta \emph{MAPiCO} fueron desarrolladas utilizando librer'ias din'amicas (o $PlugIn's$) permitiendo que el ejecutable de la m'aquina sea mas pequeño y que la modificaci'on de las instrucciones se pueda realizar sin tener que recompilar la maquina. Otra ventaja que tiene la implementaci'on de las instrucciones como $PlugIn's$ es, que si la maquina es invocada concurrentemente se cargara solo una vez el c'odigo de las instrucciones ahorrando espacio en memoria. \\
+\\
+Para el desarrollo de los $PlugIn's$ se evaluaron las librer'ias de \textbf{Guile}, \textbf{Gnome} y \textbf{Glibc}, optando por hacerlos por medio de \textbf{Glibc} debido a que \textbf{Gnome} y \textbf{Guile} la utilizan como base para sus librer'ias y tambi'en porque \textbf{Glibc} es una librer'ia portable para otros sistemas operativos, como $MacOSX$, $UNIX(Linux)$ y $Windows(Cygwin)$.\\
+\\
+Para acceder a los $PlugIn's$ por medio de \textbf{Glibc} se utilizan las funciones \emph{dlopen()} que abre una librer'ia din'amica, \emph{dlerror()} que informa del 'ultimo error ocurrido, \emph{dlsym()} que se utiliza para encontrar un simbolo en la librer'ia apuntada por el manejador obtenido en dlopen() y \emph{dlclose()} que descarga la librer'ia din'amica referenciada.\\
+\\
+En la función \emph{loadPlugIns} de la librería \emph{PlugIns.c}, de \emph{MAPiCO}, se utiliza las funciones de \textbf{Glibc} para realizar el cargue de los $PlugIn's$ que la máquina tiene configurados.\\
+
+\begin{lstlisting}
+
+1. Parameters loadPlugIns(Parameters argv, char *PathPlugInList)
+2. {
+3.   FILE *FileConfig;
+4.   void *Handle;
+5.   char *Error;
+6.   char PathLibrary[MAX_PATH];
+7.   int TamPathLibrary, NumPlugIn = 0;
+8.  
+9.   Parameters (*Catalogue)(Parameters, char *, void *, int);  
+10.  
+11.  //Abrir archivo de configuracion
+12.  if((FileConfig=fopen(PathPlugInList,"r"))==NULL)  {
+13.    printf("[ERROR]: No se pudo cargar el abrir el Archivo de PlugIn's\n");
+14.    exit(1);     
+15.  }
+16.  
+17.  while(!feof(FileConfig)) {
+18.    //Leer cada uno de los nombres de los PlugIn's
+19.    fgets(PathLibrary,MAX_PATH,FileConfig);
+20.  
+21.    if(PathLibrary[0]!='#') {
+22.      //Eliminar salto de linea
+23.      TamPathLibrary = strlen(PathLibrary);
+24.  
+25.      if(iscntrl(PathLibrary[TamPathLibrary-1]))
+26.        PathLibrary[TamPathLibrary-1]='\0';
+28.      else
+27.        PathLibrary[TamPathLibrary]='\0';
+28.  
+29.      //Abrir PlugIn
+30.      Handle = dlopen(PathLibrary, RTLD_LAZY);
+31.  
+32.      //Validar error
+33.      Error = dlerror();        
+34.      if(Error) {
+35.        argv = setResponse(argv,ERROR);
+36.        argv = setError(argv,NOT_OPEN_LIBRARY);           
+37.        fclose(FileConfig);
+38.        return argv;
+39.      }
+40.        
+41.      //Localizar funcion Catalogue del plugin
+42.      Catalogue = dlsym(Handle,"Catalogue");
+43.           
+44.      //Validar error
+45.      Error = dlerror ();        
+46.      if(Error) {
+47.        argv = setResponse(argv,ERROR);
+48.        argv = setError(argv,NOT_CATALOGUE);
+49.        fclose(FileConfig);
+50.        return argv;                
+51.      }
+52.      NumPlugIn++;
+53.      argv = Catalogue(argv,PathLibrary,Handle,NumPlugIn);
+54.    }              
+55.  }
+56.  fclose(FileConfig);
+57.  return argv;
+58.}
+\end{lstlisting}
+
+  
+En la l'inea 9, se declara un apuntador a una funci'on, que corresponde a la funci'on \textbf{Catalogue} que debe tener todo $PlugIn$ \emph{MAPiCO} (\textbf{Catalogue}, se detalla en el \emph{Anexo B. Guía de Adici'on de PlugIn's - Extensibilidad}.\\
+\\
+En la l'inea 17, se declara un ciclo el cual recorrerá línea por línea el archivo que contiene la lista con las rutas de los $PlugIn's$. Cada ruta es pasada como parámetro a la función $dlopen$ definida en la línea 30, la cual retorna un apuntador o "Handle" de la librería; con este apuntador se busca la función \emph{Catalogue} del $PlugIn$ (línea 42), el cual retorna el apuntador a la funci'on definida en la l'inea 9 y con esto ya se puede ejecutar la funci'on \textbf{Catalogue} del $PlugIn$ pasandole los p'arametros definidos en la funci'on.\\
+\\
+Con el ejemplo anterior se puede observar que el uso de $PlugIn's$ es muy sencillo y ofrece el gran potencial a la m'aquina de adicionar, eliminar o modificar instrucciones sin necesidad de afectar ni una sola línea de código.
+
+
+\newpage
+\section{Complejidades de Funciones}
+En la siguiente Tabla se presenta un comparativo de las complejidades de las funciones implementadas en la primera versión \emph{MAPiCO JAVA} y en la versión actual \emph{MAPiCO C}.
+\begin{center}
+\begin{longtable}{|l|l|p{1in}|p{1in}|} \hline
+
+\multicolumn{4}{|c|}{\bf Tabla de Complejidades} \\  \hline\hline
+\multicolumn{1}{|c|}{\bf Nombre TAD } & \multicolumn{1}{c|}{\bf Nombre Función } & \multicolumn{2}{c|}{\bf MÁQUINAS} \\ \cline{3-4}
+& & {\bf Máquina Anterior} & {\bf Máquina Actual} \\ 
+\endfirsthead  
+
+\multicolumn{4}{c}% 
+{{\bfseries \tablename\ \thetable{ Complejidades de Funciones } -- continua desde la anterior página}} \\  \hline\hline
+\multicolumn{1}{|c|}{\bf Nombre TAD } & \multicolumn{1}{c|}{\bf Nombre Función } & \multicolumn{2}{c|}{\bf MÁQUINAS} \\ \cline{3-4}
+& & {\bf Máquina Anterior} & {\bf Máquina Actual} \\  
+& & {\bf (MAPiCO JAVA)} & {\bf (MAPiCO C)} \\ \hline\hline
+
+\endhead
+
+\hline \multicolumn{4}{|r|}{{Continua en la próxima página}} \\ \hline 
+\endfoot 
+
+\hline \hline \endlastfoot 
+
+
+& & {\bf (MAPiCO JAVA)} & {\bf (MAPiCO C)} \\ \hline\hline
+\bf{List}& LENGTH\_LIST & O(1)& O(1) \\ \cline{2-4}
+& INSERT\_AT\_HEAD& O(1)& O(1) \\ \cline{2-4}
+& INSERT\_AT\_END& O(1)& O(1) \\ \cline{2-4}
+& FIRST\_NODE& O(1)& O(1) \\ \cline{2-4}
+& END\_NODE& O(1)& O(1) \\ \cline{2-4}
+& ADD\_AT\_END& O(1)& O(1) \\ \cline{2-4}
+& INSERT\_AT & O(n)& O(n) \\ \cline{2-4}
+& DEL\_FIRST\_NODE& N/A& O(1)\\ \cline{2-4}
+& FREE\_LIST& N/A& O(1)\\ \cline{2-4}
+& DEL\_AT& O(n)& O(1)\\ \cline{2-4}
+& GET\_AT& O(n)& O(1)\\ \cline{2-4}
+& SET\_AT& O(n)& O(1)\\ \cline{2-4}
+& FREE\_MEMORY\_LIST& N/A& O(n)\\ \cline{2-4}
+& PRINT\_LIST& N/A& O(n)\\ \hline
+\bf{NodeList}& INIT\_NODELIST& N/A& O(1) \\ \cline{2-4}
+& NODELIST\_CONTINUATION& O(1)& O(1) \\ \cline{2-4}
+& SETNEXT & O(1) & O(1) \\ \cline{2-4}
+& SETDATA & O(1) & O(1) \\ \cline{2-4}
+& GETNEXT & O(1) & O(1) \\ \cline{2-4}
+& GETPREV & O(1) & O(1) \\ \cline{2-4}
+& GETDATA & O(1) & O(1) \\ \cline{2-4}
+& GETDATAAT & O(n) & O(n)\\ \cline{2-4}
+& LENGTH & O(n)& O(n) \\ \cline{2-4}
+& FREE\_MEMORY\_NODELIST & N/A& O(n)\\ \cline{2-4}
+& FREE\_NODE& N/A & O(1)\\ \cline{2-4}
+& PRINT\_NODELIST & N/A& O(n) \\ \hline
+\bf{Loader}& Loader & O(1)& O(1) \\ \cline{2-4}
+& Get8 & O(1)& O(1)\\ \cline{2-4}
+& Get16 & O(1)& O(1)\\ \cline{2-4}
+& Get32 & O(1)& O(1)\\ \hline
+\bf{NodeArg}& NODEARG& N/A& O(1) \\ \cline{2-4}
+& NODE\_CONTINUATION\_ARG& O(1)& O(1) \\ \cline{2-4}
+& SETNEXT\_ARG& O(1)& O(1) \\ \cline{2-4}
+& SETDATA\_ARG& O(1)& O(1) \\ \cline{2-4}
+& GETNEXT\_ARG& O(1)& O(1) \\ \cline{2-4}
+& ISVALIDNEXT\_ARG& N/A& O(1)\\ \cline{2-4}
+& GETTYPE\_ARG& N/A& O(1) \\ \cline{2-4}
+& GETPREV\_ARG& O(1)& O(1) \\ \cline{2-4}
+& GETDATA\_ARG& O(1)& O(1) \\ \cline{2-4}
+& GETDATAAT\_ARG& O(n)& O(n) \\ \cline{2-4}
+& LENGTH \_ARG& O(n)& O(n) \\ \cline{2-4}
+& FREE\_MEMORY\_NODELIST\_ARG& N/A& O(n)\\ \cline{2-4}
+& FREE\_NODE\_ARG& N/A& O(1)\\ \cline{2-4}
+& PRINT\_NODE\_ARG& N/A& O(n)\\ \hline
+\bf{Process}& InitProcess& N/A& O(1)\\ \cline{2-4}
+& NewProcess& N/A& O(1) \\ \cline{2-4}
+& SetPC& O(1)& O(1) \\ \cline{2-4}
+& SetPV& O(1)& O(1) \\ \cline{2-4}
+& SetPM& O(1)& O(1)\\ \cline{2-4}
+& SetPA& O(1)& O(1)\\ \cline{2-4}
+& SetPO& O(1)& O(1)\\ \cline{2-4}
+& SetPAUX& O(1)& O(1)\\ \cline{2-4}
+& SetPTEMP& O(1)& O(1)\\ \cline{2-4}
+& GetPC& O(1)& O(1)\\ \cline{2-4}
+& GetPV& O(1)& O(1)\\ \cline{2-4}
+& GetPM& O(1)& O(1)\\ \cline{2-4}
+& GetPA& O(1)& O(1)\\ \cline{2-4}
+& GetPO& O(1)& O(1)\\ \cline{2-4}
+& GetPAUX& O(1)& O(1)\\ \cline{2-4}
+& GetPTEMP& O(1)& O(1)\\ \cline{2-4}
+& DelProcess& N/A& O(1)\\ \hline
+\bf{StoreMA}& InitStoreMA& N/A& O(1)\\ \cline{2-4}
+& TellMA& O(1)& O(1)\\ \cline{2-4}
+& AskMA& O(1)& O(1)\\ \cline{2-4}
+& InicFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& InicpFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& GetLefSonFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& GetRigSonFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& SetLefSonFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& SetRigSonFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& DestroyFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& PrintFrameConstMA& N/A& O(1)\\ \cline{2-4}
+& GetResponseMA& N/A& O(1)\\ \cline{2-4}
+& GetInicMA& N/A& O(1)\\ \cline{2-4}
+& FreeStoreMA& N/A& O(1)\\ \hline
+\bf{BinaryTree}& NewNode& N/A& O(1)\\ \cline{2-4}
+& InsertNode& N/A& O(1)\\ \cline{2-4}
+& LeftNode& N/A& O(1)\\ \cline{2-4}
+& RightNode& N/A& O(1)\\ \cline{2-4}
+& SearchNode& N/A& O(log2n)\\ \cline{2-4}
+& Inorden& N/A& O(log2n)\\ \cline{2-4}
+& FreeTree& N/A& O(log2n)\\ \hline
+\bf{HeapSort}& SearchBinary& N/A& O(log n)\\ \cline{2-4}
+& Exchange& N/A& O(1)\\ \cline{2-4}
+& Left & N/A& O(1)\\ \cline{2-4}
+& Right & N/A& O(1)\\ \cline{2-4}
+& Heapify& N/A& O(log n)\\ \cline{2-4}
+& Build\_Heap& N/A& O(log n)\\ \cline{2-4}
+& HeapSort& N/A& O(log n)\\ \hline
+\bf{ObjectEval}& INICOBJECTEVAL& N/A& O(1)\\ \cline{2-4}
+& GETNUMOBJECTS& N/A& O(1)\\ \cline{2-4}
+& SETNUMOBJECTS& N/A& O(1)\\ \cline{2-4}
+& DELPCS& N/A& O(1)\\ \cline{2-4}
+& GETPCS& N/A& O(1)\\ \cline{2-4}
+& GET\_PC\_AT& N/A& O(1)\\ \cline{2-4}
+& SAVE\_PC& N/A& O(1)\\ \cline{2-4}
+& PRINT\_PCS& N/A& O(n)\\ \hline
+\bf{Parameters}& NewParameters& N/A& O(1)\\ \cline{2-4}
+& addVblePlugIn& N/A& O(1)\\ \cline{2-4}
+& setAtVblePlugIn& N/A& O(1)\\ \cline{2-4}
+& getAtVblePlugIn& N/A& O(1)\\ \cline{2-4}
+& setHandle& N/A& O(1)\\ \cline{2-4}
+& getHandle& N/A& O(1)\\ \cline{2-4}
+& setPathLibrary& N/A& O(1)\\ \cline{2-4}
+& getPathLibrary& N/A& O(1)\\ \cline{2-4}
+& setNameFunction& N/A& O(1)\\ \cline{2-4}
+& getNameFunction& N/A& O(1)\\ \cline{2-4}
+& setResponse& N/A& O(1)\\ \cline{2-4}
+& getResponse& N/A& O(1)\\ \cline{2-4}
+& setOpCodeSchedule& N/A& O(1)\\ \cline{2-4}
+& getOpCodeSchedule& N/A& O(1)\\ \cline{2-4}
+& setStoreMA& N/A& O(1)\\ \cline{2-4}
+& getStoreMA& N/A& O(1)\\ \cline{2-4}
+& setError& N/A& O(1)\\ \cline{2-4}
+& getError& N/A& O(1)\\ \cline{2-4}
+& setNumPlugInsLoad& N/A& O(1)\\ \cline{2-4}
+& getNumPlugInsLoad& N/A& O(1)\\ \cline{2-4}
+& isInstruction& N/A& O(1)\\ \cline{2-4}
+& getIndexPlugIn& N/A& O(1)\\ \cline{2-4}
+& freeParameters& N/A& O(n)\\ \hline
+\bf{PlugIns}& loadInstructions& N/A& O(n)\\ \cline{2-4}
+& loadPlugIns& N/A& O(n)\\ \cline{2-4}
+& getInstruction& N/A& O(1)\\ \cline{2-4}
+& closePlugIns& N/A& O(n) \\ \hline
+\bf{Auxiliar}& INICAUXILIAR& N/A& O(1)\\ \cline{2-4}
+& SETNODEARG& N/A& O(1)\\ \cline{2-4}
+& SETFRAMECONST& N/A& O(1)\\ \cline{2-4}
+& GETTYPE& N/A& O(1)\\ \cline{2-4}
+& SETTYPE& N/A& O(1)\\ \cline{2-4}
+& GETNODEARG& N/A& O(1)\\ \cline{2-4}
+& GETFRAMECONST& N/A& O(1)\\ \cline{2-4}
+& FREEFRAMECONST& N/A& O(1)\\ \cline{2-4}
+& FREEAUX& N/A& O(1)\\ \hline
+\end{longtable}
+\end{center}
+
